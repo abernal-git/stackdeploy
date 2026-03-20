@@ -4,16 +4,15 @@
 # ============================================================
 
 # -- STAGE 1: Build ------------------------------------------
-FROM node:20-alpine AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /app
 
-# Copiar dependencias primero (cache layer)
-COPY package*.json ./
-RUN npm ci --only=production 2>/dev/null || echo "No package.json, skipping"
-
-# Copiar el resto del codigo
+# Copiar todo el proyecto
 COPY . .
+
+# Correr el build del blog (convierte .txt -> HTML)
+RUN python3 build_blog.py
 
 # -- STAGE 2: Production (nginx) -----------------------------
 FROM nginx:1.25-alpine AS production
@@ -27,8 +26,8 @@ ENV APP_VERSION=${APP_VERSION}
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Copiar el blog (HTML estatico)
-COPY --from=builder /app /usr/share/nginx/html
+# Copiar solo la carpeta public/ generada por build_blog.py
+COPY --from=builder /app/public /usr/share/nginx/html
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

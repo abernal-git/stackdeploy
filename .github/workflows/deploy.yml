@@ -62,14 +62,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Build blog from articles
-        run: python3 build_blog.py
-
       - name: Generate Docker image metadata
         id: meta
         uses: docker/metadata-action@v5
