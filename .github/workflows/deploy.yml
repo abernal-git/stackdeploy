@@ -1,13 +1,13 @@
 # ============================================================
-#  StackDeploy Blog — GitHub Actions Pipeline
-#  DEV → STAGING → PRODUCTION
+#  StackDeploy Blog -- GitHub Actions Pipeline
+#  DEV -> STAGING -> PRODUCTION
 #
 #  Flujo:
-#  1. Push a main      → Build + Deploy a STAGING automático
-#  2. Tag vX.X.X       → Deploy a PRODUCTION (requiere aprobación)
-#  3. Pull Request      → Solo build + test (sin deploy)
+#  1. Push a main      -> Build + Deploy a STAGING automtico
+#  2. Tag vX.X.X       -> Deploy a PRODUCTION (requiere aprobacin)
+#  3. Pull Request      -> Solo build + test (sin deploy)
 #
-#  Secrets requeridos en GitHub (Settings → Secrets):
+#  Secrets requeridos en GitHub (Settings -> Secrets):
 #  - AZURE_CLIENT_ID
 #  - AZURE_CLIENT_SECRET
 #  - AZURE_TENANT_ID
@@ -20,15 +20,15 @@
 #  - AZURE_RESOURCE_GROUP
 # ============================================================
 
-name: 🚀 StackDeploy CI/CD Pipeline
+name: StackDeploy CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main        # → Deploy a STAGING
-      - develop     # → Solo build
+      - main        # -> Deploy a STAGING
+      - develop     # -> Solo build
     tags:
-      - 'v*.*.*'    # → Deploy a PRODUCTION
+      - 'v*.*.*'    # -> Deploy a PRODUCTION
   pull_request:
     branches:
       - main
@@ -38,7 +38,7 @@ env:
   APP_NAME: stackdeploy-blog
   ACR_IMAGE: ${{ secrets.ACR_LOGIN_SERVER }}/stackdeploy-blog
 
-# ── PERMISOS ──────────────────────────────────────────────
+# -- PERMISOS ----------------------------------------------
 permissions:
   contents: read
   packages: write
@@ -46,12 +46,12 @@ permissions:
 
 jobs:
 
-  # ════════════════════════════════════════════════════════
+  # ========================================================
   #  JOB 1: BUILD & TEST
   #  Corre en: todos los push y PRs
-  # ════════════════════════════════════════════════════════
+  # ========================================================
   build:
-    name: 🔨 Build & Test
+    name: Build and Test
     runs-on: ubuntu-latest
 
     outputs:
@@ -59,10 +59,10 @@ jobs:
       image_digest: ${{ steps.build.outputs.digest }}
 
     steps:
-      - name: 📥 Checkout código
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🏷️ Generar metadata de imagen Docker
+      - name: Generate Docker image metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -75,17 +75,17 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: 🔐 Login a Azure Container Registry
+      - name: Login to Azure Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: ⚡ Setup Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🐳 Build Docker image
+      - name: Build Docker image
         id: build
         uses: docker/build-push-action@v5
         with:
@@ -100,7 +100,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: 🧪 Test: Health check del container
+      - name: Test Health check
         if: github.event_name != 'pull_request'
         env:
           SHORT_SHA: ${{ github.sha }}
@@ -118,18 +118,18 @@ jobs:
           echo "Corriendo health check..."
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health)
           if [ "$RESPONSE" = "200" ]; then
-            echo "✅ Health check OK (HTTP $RESPONSE)"
+            echo "[OK] Health check OK (HTTP $RESPONSE)"
           else
-            echo "❌ Health check FALLÓ (HTTP $RESPONSE)"
+            echo "[ERROR] Health check FALL (HTTP $RESPONSE)"
             docker logs test_container
             exit 1
           fi
 
           docker rm -f test_container
 
-      - name: 📊 Resumen del build
+      - name: Build summary
         run: |
-          echo "## 🐳 Docker Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## [Docker] Docker Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| **Imagen** | \`${{ env.ACR_IMAGE }}\` |" >> $GITHUB_STEP_SUMMARY
@@ -139,12 +139,12 @@ jobs:
           echo "| **Autor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
 
 
-  # ════════════════════════════════════════════════════════
+  # ========================================================
   #  JOB 2: DEPLOY A STAGING
   #  Corre en: push a main solamente
-  # ════════════════════════════════════════════════════════
+  # ========================================================
   deploy-staging:
-    name: 🟡 Deploy → STAGING
+    name: Deploy to STAGING
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -154,10 +154,10 @@ jobs:
       url: https://stackdeploy-staging.azurecontainerapps.io
 
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔐 Login a Azure
+      - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: |
@@ -168,7 +168,7 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
-      - name: 🚀 Deploy a Azure Container Apps (STAGING)
+      - name: Deploy to Azure Container Apps STAGING
         uses: azure/container-apps-deploy-action@v1
         with:
           acrName: ${{ secrets.ACR_LOGIN_SERVER }}
@@ -179,23 +179,23 @@ jobs:
             ENVIRONMENT=staging
             APP_VERSION=${{ needs.build.outputs.image_tag }}
 
-      - name: ⏳ Esperar deploy y verificar
+      - name: Wait and verify staging
         run: |
-          echo "Esperando que el deploy esté listo..."
+          echo "Esperando que el deploy est listo..."
           sleep 30
 
           STAGING_URL="https://stackdeploy-staging.azurecontainerapps.io/health"
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL" || echo "000")
 
           if [ "$RESPONSE" = "200" ]; then
-            echo "✅ Staging OK — $STAGING_URL"
+            echo "[OK] Staging OK -- $STAGING_URL"
           else
-            echo "⚠️ Staging respondió HTTP $RESPONSE — revisando logs..."
+            echo "[WARN] Staging respondi HTTP $RESPONSE -- revisando logs..."
           fi
 
-      - name: 📊 Resumen staging
+      - name: Staging summary
         run: |
-          echo "## 🟡 Staging Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "## [STAGING] Staging Deploy" >> $GITHUB_STEP_SUMMARY
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| **Ambiente** | Staging |" >> $GITHUB_STEP_SUMMARY
@@ -205,13 +205,13 @@ jobs:
           echo "| **Timestamp** | $(date -u) |" >> $GITHUB_STEP_SUMMARY
 
 
-  # ════════════════════════════════════════════════════════
-  #  JOB 3: DEPLOY A PRODUCCIÓN
+  # ========================================================
+  #  JOB 3: DEPLOY A PRODUCCIN
   #  Corre en: tags tipo v1.0.0 SOLAMENTE
-  #  Requiere aprobación manual en GitHub Environments
-  # ════════════════════════════════════════════════════════
+  #  Requiere aprobacin manual en GitHub Environments
+  # ========================================================
   deploy-production:
-    name: 🟢 Deploy → PRODUCTION
+    name: Deploy to PRODUCTION
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
@@ -221,10 +221,10 @@ jobs:
       url: https://stackdeploy.dev
 
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔐 Login a Azure
+      - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: |
@@ -235,7 +235,7 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
-      - name: 🚀 Deploy a Azure Container Apps (PRODUCTION)
+      - name: Deploy to Azure Container Apps PRODUCTION
         uses: azure/container-apps-deploy-action@v1
         with:
           acrName: ${{ secrets.ACR_LOGIN_SERVER }}
@@ -246,9 +246,9 @@ jobs:
             ENVIRONMENT=production
             APP_VERSION=${{ github.ref_name }}
 
-      - name: ⏳ Verificar producción
+      - name: Verify production
         run: |
-          echo "Esperando que el deploy esté listo..."
+          echo "Esperando que el deploy est listo..."
           sleep 45
 
           PROD_URL="https://stackdeploy.dev/health"
@@ -258,33 +258,33 @@ jobs:
           while [ $RETRY -lt $MAX_RETRIES ]; do
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" || echo "000")
             if [ "$RESPONSE" = "200" ]; then
-              echo "✅ Producción OK — $PROD_URL"
+              echo "[OK] Produccin OK -- $PROD_URL"
               break
             fi
-            echo "⏳ Intento $((RETRY+1))/$MAX_RETRIES — HTTP $RESPONSE. Reintentando..."
+            echo "[WAIT] Intento $((RETRY+1))/$MAX_RETRIES -- HTTP $RESPONSE. Reintentando..."
             RETRY=$((RETRY+1))
             sleep 15
           done
 
           if [ $RETRY -eq $MAX_RETRIES ]; then
-            echo "❌ Producción no respondió después de $MAX_RETRIES intentos"
+            echo "[ERROR] Produccin no respondi despus de $MAX_RETRIES intentos"
             exit 1
           fi
 
-      - name: 🏷️ Crear GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: "StackDeploy ${{ github.ref_name }}"
           body: |
-            ## 🚀 Release ${{ github.ref_name }}
+            ## [Deploy] Release ${{ github.ref_name }}
 
-            **Deploy exitoso a Producción**
+            **Deploy exitoso a Produccin**
 
-            - 🌐 URL: https://stackdeploy.dev
-            - 🐳 Imagen: `${{ env.ACR_IMAGE }}:${{ needs.build.outputs.image_tag }}`
-            - 👤 Deployed by: @${{ github.actor }}
-            - 📅 Fecha: ${{ github.event.head_commit.timestamp }}
+            - [URL] URL: https://stackdeploy.dev
+            - [Docker] Imagen: `${{ env.ACR_IMAGE }}:${{ needs.build.outputs.image_tag }}`
+            - [User] Deployed by: @${{ github.actor }}
+            - [Date] Fecha: ${{ github.event.head_commit.timestamp }}
 
             ### Commits en este release
             ${{ github.event.head_commit.message }}
@@ -293,12 +293,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📊 Resumen producción
+      - name: Production summary
         run: |
-          echo "## 🟢 Production Deploy — ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "## [PROD] Production Deploy -- ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Ambiente** | 🟢 Production |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Ambiente** | [PROD] Production |" >> $GITHUB_STEP_SUMMARY
           echo "| **URL** | https://stackdeploy.dev |" >> $GITHUB_STEP_SUMMARY
           echo "| **Version** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Imagen** | \`${{ needs.build.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
