@@ -223,11 +223,13 @@ jobs:
 
       - name: Deploy to Azure Container Apps PRODUCTION
         run: |
-          az extension add --name containerapp --upgrade -y
+          az extension add --name containerapp --upgrade -y 2>/dev/null || true
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           az containerapp update \
             --name ${{ secrets.PROD_APP_NAME }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --image ${{ env.ACR_IMAGE }}:${{ needs.build.outputs.image_tag }} \
+            --image ${{ env.ACR_IMAGE }}:sha-${SHORT_SHA} \
+            --revision-suffix p${SHORT_SHA} \
             --set-env-vars ENVIRONMENT=production APP_VERSION=${{ github.ref_name }}
 
       - name: Verify production
