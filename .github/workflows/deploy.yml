@@ -257,30 +257,6 @@ jobs:
             exit 1
           fi
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "StackDeploy ${{ github.ref_name }}"
-          body: |
-            ## [Deploy] Release ${{ github.ref_name }}
-
-            **Deploy exitoso a Produccin**
-
-            - [URL] URL: https://stackdeploy.dev
-            - [Docker] Imagen: `${{ env.ACR_IMAGE }}:${{ needs.build.outputs.image_tag }}`
-            - [User] Deployed by: @${{ github.actor }}
-            - [Date] Fecha: ${{ github.event.head_commit.timestamp }}
-
-            ### Commits en este release
-            ${{ github.event.head_commit.message }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Production summary
-        run: |
           echo "## [PROD] Production Deploy -- ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
