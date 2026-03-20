@@ -19,9 +19,9 @@
 #  - PROD_APP_NAME          (Azure Container App name)
 #  - AZURE_RESOURCE_GROUP
 # ============================================================
- 
+
 name: 🚀 StackDeploy CI/CD Pipeline
- 
+
 on:
   push:
     branches:
@@ -33,19 +33,19 @@ on:
     branches:
       - main
       - develop
- 
+
 env:
   APP_NAME: stackdeploy-blog
   ACR_IMAGE: ${{ secrets.ACR_LOGIN_SERVER }}/stackdeploy-blog
- 
+
 # ── PERMISOS ──────────────────────────────────────────────
 permissions:
   contents: read
   packages: write
   id-token: write   # Para Azure OIDC login
- 
+
 jobs:
- 
+
   # ════════════════════════════════════════════════════════
   #  JOB 1: BUILD & TEST
   #  Corre en: todos los push y PRs
@@ -53,15 +53,15 @@ jobs:
   build:
     name: 🔨 Build & Test
     runs-on: ubuntu-latest
- 
+
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}
       image_digest: ${{ steps.build.outputs.digest }}
- 
+
     steps:
       - name: 📥 Checkout código
         uses: actions/checkout@v4
- 
+
       - name: 🏷️ Generar metadata de imagen Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -74,17 +74,17 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-,format=short
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
- 
+
       - name: 🔐 Login a Azure Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
- 
+
       - name: ⚡ Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
- 
+
       - name: 🐳 Build Docker image
         id: build
         uses: docker/build-push-action@v5
@@ -99,7 +99,7 @@ jobs:
             APP_VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
- 
+
       - name: 🧪 Test: Health check del container
         if: github.event_name != 'pull_request'
         env:
@@ -111,10 +111,10 @@ jobs:
             -p 8080:80 \
             -e ENVIRONMENT=test \
             ${{ env.ACR_IMAGE }}:sha-${SHORT}
- 
+
           echo "Esperando que el container inicie..."
           sleep 5
- 
+
           echo "Corriendo health check..."
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health)
           if [ "$RESPONSE" = "200" ]; then
@@ -124,9 +124,9 @@ jobs:
             docker logs test_container
             exit 1
           fi
- 
+
           docker rm -f test_container
- 
+
       - name: 📊 Resumen del build
         run: |
           echo "## 🐳 Docker Build Summary" >> $GITHUB_STEP_SUMMARY
@@ -137,8 +137,8 @@ jobs:
           echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Autor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
- 
- 
+
+
   # ════════════════════════════════════════════════════════
   #  JOB 2: DEPLOY A STAGING
   #  Corre en: push a main solamente
@@ -148,15 +148,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
- 
+
     environment:
       name: staging
       url: https://stackdeploy-staging.azurecontainerapps.io
- 
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
- 
+
       - name: 🔐 Login a Azure
         uses: azure/login@v1
         with:
@@ -167,7 +167,7 @@ jobs:
               "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
- 
+
       - name: 🚀 Deploy a Azure Container Apps (STAGING)
         uses: azure/container-apps-deploy-action@v1
         with:
@@ -178,21 +178,21 @@ jobs:
           environmentVariables: |
             ENVIRONMENT=staging
             APP_VERSION=${{ needs.build.outputs.image_tag }}
- 
+
       - name: ⏳ Esperar deploy y verificar
         run: |
           echo "Esperando que el deploy esté listo..."
           sleep 30
- 
+
           STAGING_URL="https://stackdeploy-staging.azurecontainerapps.io/health"
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL" || echo "000")
- 
+
           if [ "$RESPONSE" = "200" ]; then
             echo "✅ Staging OK — $STAGING_URL"
           else
             echo "⚠️ Staging respondió HTTP $RESPONSE — revisando logs..."
           fi
- 
+
       - name: 📊 Resumen staging
         run: |
           echo "## 🟡 Staging Deploy" >> $GITHUB_STEP_SUMMARY
@@ -203,8 +203,8 @@ jobs:
           echo "| **Imagen** | \`${{ needs.build.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Deployed by** | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Timestamp** | $(date -u) |" >> $GITHUB_STEP_SUMMARY
- 
- 
+
+
   # ════════════════════════════════════════════════════════
   #  JOB 3: DEPLOY A PRODUCCIÓN
   #  Corre en: tags tipo v1.0.0 SOLAMENTE
@@ -215,15 +215,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
- 
+
     environment:
       name: production
       url: https://stackdeploy.dev
- 
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
- 
+
       - name: 🔐 Login a Azure
         uses: azure/login@v1
         with:
@@ -234,7 +234,7 @@ jobs:
               "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
- 
+
       - name: 🚀 Deploy a Azure Container Apps (PRODUCTION)
         uses: azure/container-apps-deploy-action@v1
         with:
@@ -245,16 +245,16 @@ jobs:
           environmentVariables: |
             ENVIRONMENT=production
             APP_VERSION=${{ github.ref_name }}
- 
+
       - name: ⏳ Verificar producción
         run: |
           echo "Esperando que el deploy esté listo..."
           sleep 45
- 
+
           PROD_URL="https://stackdeploy.dev/health"
           MAX_RETRIES=5
           RETRY=0
- 
+
           while [ $RETRY -lt $MAX_RETRIES ]; do
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL" || echo "000")
             if [ "$RESPONSE" = "200" ]; then
@@ -265,12 +265,12 @@ jobs:
             RETRY=$((RETRY+1))
             sleep 15
           done
- 
+
           if [ $RETRY -eq $MAX_RETRIES ]; then
             echo "❌ Producción no respondió después de $MAX_RETRIES intentos"
             exit 1
           fi
- 
+
       - name: 🏷️ Crear GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -278,21 +278,21 @@ jobs:
           name: "StackDeploy ${{ github.ref_name }}"
           body: |
             ## 🚀 Release ${{ github.ref_name }}
- 
+
             **Deploy exitoso a Producción**
- 
+
             - 🌐 URL: https://stackdeploy.dev
             - 🐳 Imagen: `${{ env.ACR_IMAGE }}:${{ needs.build.outputs.image_tag }}`
             - 👤 Deployed by: @${{ github.actor }}
             - 📅 Fecha: ${{ github.event.head_commit.timestamp }}
- 
+
             ### Commits en este release
             ${{ github.event.head_commit.message }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
+
       - name: 📊 Resumen producción
         run: |
           echo "## 🟢 Production Deploy — ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
@@ -304,4 +304,3 @@ jobs:
           echo "| **Imagen** | \`${{ needs.build.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Deployed by** | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Timestamp** | $(date -u) |" >> $GITHUB_STEP_SUMMARY
- 
