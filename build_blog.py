@@ -21,6 +21,7 @@ READY_DIR     = BASE_DIR / "stackdeploy-content" / "04_ready"
 PUBLISHED_DIR = BASE_DIR / "stackdeploy-content" / "05_published"
 OUTPUT_DIR    = BASE_DIR / "public"
 ARTICLES_DIR  = OUTPUT_DIR / "articles"
+PAGES_DIR     = BASE_DIR / "pages"
 
 # ── CREAR CARPETAS ─────────────────────────────────────────
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -314,6 +315,40 @@ function copyCode(btn) {{
 </body>
 </html>'''
 
+# ── GENERAR CARDS HTML ─────────────────────────────────────
+def generate_cards_html(articles):
+    """Genera el HTML de las cards de articulos"""
+    cards = ''
+    for a in articles:
+        cards += f"""
+        <a class="article-card" href="/articles/{a["slug"]}.html">
+          <div class="card-tags">
+            <span class="tag">{a.get("categoria","")}</span>
+            <span class="tag outline">{a.get("nivel","")}</span>
+          </div>
+          <div class="card-title">{a.get("titulo","")}</div>
+          <p class="card-excerpt">{a.get("excerpt","")}</p>
+          <div class="card-meta">
+            <span>{a.get("fecha","")}</span>
+            <span class="read-more">READ MORE</span>
+          </div>
+        </a>"""
+    return cards
+
+# ── INYECTAR CARDS EN UN HTML ──────────────────────────────
+def inject_cards(html_content, cards_html):
+    """Inyecta cards entre los markers ARTICLES_START y ARTICLES_END"""
+    marker_start = '<!-- ARTICLES_START -->'
+    marker_end = '<!-- ARTICLES_END -->'
+    if marker_start in html_content and marker_end in html_content:
+        replacement = marker_start + '\n' + cards_html + '\n    ' + marker_end
+        return re.sub(
+            re.escape(marker_start) + '.*?' + re.escape(marker_end),
+            replacement,
+            html_content, flags=re.DOTALL
+        )
+    return html_content
+
 # ── GENERAR INDEX.HTML ─────────────────────────────────────
 def generate_index_html(articles):
     cards_html = ''
@@ -430,9 +465,8 @@ def main():
     json_files = sorted(READY_DIR.glob("*_meta.json")) if READY_DIR.exists() else []
 
     if not txt_files:
-        print(f"\n  No hay articulos en {READY_DIR}")
-        print("  Corre primero el pipeline de contenido.\n")
-        return
+        print(f"\n  No hay articulos nuevos en {READY_DIR}")
+        print("  Copiando paginas estaticas...\n")
 
     print(f"\n  Encontrados: {len(txt_files)} articulos\n")
 
@@ -491,6 +525,46 @@ def main():
 
     print(f"\n  [OK] index.html actualizado con {len(articles)} articulo(s)")
     print(f"  [OK] Archivos generados en: public/")
+
+    # Copiar pages/ a public/ siempre (independiente de articulos nuevos)
+    articles_src = BASE_DIR / "pages" / "articles.html"
+    articles_dst = OUTPUT_DIR / "articles.html"
+    contact_src  = BASE_DIR / "pages" / "contact.html"
+    contact_dst  = OUTPUT_DIR / "contact.html"
+
+    if articles_src.exists():
+        with open(articles_src, 'r', encoding='utf-8') as f:
+            art_content = f.read()
+        # Inyectar todas las cards (leer desde 05_published)
+        all_articles = []
+        for pf in sorted((BASE_DIR / "stackdeploy-content" / "05_published").glob("*_meta.json"), reverse=True):
+            import json as _json
+            with open(pf) as jf:
+                m = _json.load(jf)
+                all_articles.append(m)
+        # Normalizar campos del meta.json al formato interno
+        normalized = []
+        for m in all_articles:
+            normalized.append({
+                'titulo':    m.get('title', m.get('titulo', '')),
+                'slug':      m.get('slug', ''),
+                'categoria': m.get('category', m.get('categoria', '')),
+                'nivel':     m.get('level', m.get('nivel', '')),
+                'fecha':     m.get('publish_date', m.get('fecha', '')),
+                'excerpt':   m.get('excerpt', ''),
+            })
+        all_articles = normalized
+        if all_articles:
+            all_cards = generate_cards_html(all_articles)
+            art_content = inject_cards(art_content, all_cards)
+        with open(articles_dst, 'w', encoding='utf-8') as f:
+            f.write(art_content)
+        print(f"  [OK] articles.html copiado a public/")
+
+    if contact_src.exists():
+        shutil.copy(str(contact_src), str(contact_dst))
+        print(f"  [OK] contact.html copiado a public/")
+
     print(f"\n  Listo para hacer push a GitHub!\n")
 
 if __name__ == '__main__':
