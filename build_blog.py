@@ -319,18 +319,17 @@ function copyCode(btn) {{
 def generate_cards_html(articles):
     """Genera el HTML de las cards de articulos"""
     cards = ''
-    for a in articles:
+    for i, a in enumerate(articles, 1):
+        num = str(i).zfill(2)
         cards += f"""
         <a class="article-card" href="/articles/{a["slug"]}.html">
-          <div class="card-tags">
-            <span class="tag">{a.get("categoria","")}</span>
-            <span class="tag outline">{a.get("nivel","")}</span>
-          </div>
-          <div class="card-title">{a.get("titulo","")}</div>
+          <div class="card-number">// {num}</div>
+          <div class="card-category">{a.get("categoria", a.get("category",""))}</div>
+          <div class="card-title">{a.get("titulo", a.get("title",""))}</div>
           <p class="card-excerpt">{a.get("excerpt","")}</p>
-          <div class="card-meta">
-            <span>{a.get("fecha","")}</span>
-            <span class="read-more">READ MORE</span>
+          <div class="card-footer">
+            <span class="card-date">{a.get("fecha", a.get("publish_date",""))}</span>
+            <span class="card-arrow">→</span>
           </div>
         </a>"""
     return cards
