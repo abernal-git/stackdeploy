@@ -102,12 +102,15 @@ jobs:
  
       - name: 🧪 Test: Health check del container
         if: github.event_name != 'pull_request'
+        env:
+          SHORT_SHA: ${{ github.sha }}
         run: |
           echo "Levantando container para test..."
+          SHORT=$(echo "$SHORT_SHA" | cut -c1-7)
           docker run -d --name test_container \
             -p 8080:80 \
             -e ENVIRONMENT=test \
-            ${{ env.ACR_IMAGE }}:sha-$(echo ${{ github.sha }} | cut -c1-7)
+            ${{ env.ACR_IMAGE }}:sha-${SHORT}
  
           echo "Esperando que el container inicie..."
           sleep 5
