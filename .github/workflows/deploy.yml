@@ -68,12 +68,9 @@ jobs:
         with:
           images: ${{ env.ACR_IMAGE }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-,format=short
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -166,10 +163,13 @@ jobs:
       - name: Deploy to Azure Container Apps STAGING
         run: |
           az extension add --name containerapp --upgrade -y
+          az extension add --name containerapp --upgrade -y 2>/dev/null
+          REVISION="rev$(date +%s)"
           az containerapp update \
             --name ${{ secrets.STAGING_APP_NAME }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --image ${{ env.ACR_IMAGE }}:${{ needs.build.outputs.image_tag }} \
+            --image ${{ env.ACR_IMAGE }}:main \
+            --revision-suffix $REVISION \
             --set-env-vars ENVIRONMENT=staging APP_VERSION=${{ needs.build.outputs.image_tag }}
 
       - name: Wait and verify staging
