@@ -162,15 +162,14 @@ jobs:
 
       - name: Deploy to Azure Container Apps STAGING
         run: |
-          az extension add --name containerapp --upgrade -y
-          az extension add --name containerapp --upgrade -y 2>/dev/null
-          REVISION="rev$(date +%s)"
+          az extension add --name containerapp --upgrade -y 2>/dev/null || true
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           az containerapp update \
             --name ${{ secrets.STAGING_APP_NAME }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --image ${{ env.ACR_IMAGE }}:main \
-            --revision-suffix $REVISION \
-            --set-env-vars ENVIRONMENT=staging APP_VERSION=${{ needs.build.outputs.image_tag }}
+            --image ${{ env.ACR_IMAGE }}:sha-${SHORT_SHA} \
+            --revision-suffix r${SHORT_SHA} \
+            --set-env-vars ENVIRONMENT=staging APP_VERSION=${SHORT_SHA}
 
       - name: Wait and verify staging
         run: |
