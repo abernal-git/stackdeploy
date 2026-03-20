@@ -1,0 +1,56 @@
+# ============================================================
+#  StackDeploy — docker-compose.yml
+#  Ambiente LOCAL (DEV)
+#  Uso: docker compose up --build
+# ============================================================
+ 
+version: '3.9'
+ 
+services:
+ 
+  # ── Blog principal ────────────────────────────────────────
+  blog:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        ENVIRONMENT: development
+        APP_VERSION: dev-local
+    image: stackdeploy-blog:dev
+    container_name: stackdeploy_dev
+    ports:
+      - "3000:80"
+    environment:
+      - ENVIRONMENT=development
+      - APP_VERSION=dev-local
+    volumes:
+      # Hot reload: monta el HTML directamente
+      - ./:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    labels:
+      - "com.stackdeploy.environment=development"
+      - "com.stackdeploy.author=abernal093"
+ 
+  # ── Nginx Proxy (opcional para dev con múltiples servicios)
+  # proxy:
+  #   image: traefik:v3.0
+  #   ports:
+  #     - "80:80"
+  #     - "8080:8080"
+ 
+networks:
+  default:
+    name: stackdeploy_network
+ 
+# ── Uso:
+# docker compose up --build          → Iniciar en dev
+# docker compose up -d               → Background
+# docker compose logs -f blog        → Ver logs
+# docker compose down                → Parar
+# docker compose exec blog sh        → Entrar al container
+ 
