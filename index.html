@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Andres Bernal | Linux & DevOps Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --dark: #111111;
+    --card-bg: #141414;
+    --lime: #b0b0b0;
+    --lime-dim: #888888;
+    --white: #f0f0f0;
+    --gray: #888;
+    --border: #222;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--lime);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--gray);
+    text-decoration: none;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--lime);
+    border-color: var(--lime);
+    background: rgba(200,255,0,0.05);
+  }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--white);
+    transition: all 0.3s;
+  }
+
+  /* SECTIONS */
+  section { display: none; padding-top: 64px; min-height: 100vh; }
+  section.active { display: block; }
+
+  /* ===== HOME ===== */
+  #home {
+    display: none;
+    flex-direction: column;
+  }
+  #home.active { display: flex; }
+
+  .hero {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 80px 40px 60px;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 50% at 70% 50%, rgba(200,255,0,0.06) 0%, transparent 70%),
+      linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0d0d0d 100%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(200,255,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,255,0,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-content {
+    position: relative;
+    max-width: 800px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--lime);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    border: 1px solid rgba(200,255,0,0.3);
+    padding: 6px 14px;
+    background: rgba(200,255,0,0.05);
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--lime);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 10vw, 120px);
+    line-height: 0.9;
+    letter-spacing: -2px;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .hero-tagline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 4vw, 52px);
+    letter-spacing: 6px;
+    color: var(--lime);
+    margin-bottom: 24px;
+    opacity: 0.85;
+  }
+
+  .hero h1 .accent {
+    color: var(--lime);
+    display: block;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--gray);
+    line-height: 1.7;
+    max-width: 500px;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--lime);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ABOUT STRIP */
+  .about-strip {
+    background: #1a1a1a;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    overflow: hidden;
+    border-top: 1px solid #2a2a2a;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .about-strip p {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--lime);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* FEATURED ARTICLES ON HOME */
+  .home-articles {
+    padding: 80px 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 2px;
+  }
+
+  .section-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--lime);
+    letter-spacing: 2px;
+  }
+
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2px;
+  }
+
+  .article-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 32px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .article-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--lime);
+    transition: height 0.3s;
+  }
+
+  .article-card:hover {
+    background: #181818;
+    transform: translateY(-2px);
+    border-color: #333;
+  }
+
+  .article-card:hover::before { height: 100%; }
+
+  .card-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--white);
+    background: #2a2a2a;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+    border: 1px solid #3a3a3a;
+  }
+
+  .tag.outline {
+    background: transparent;
+    color: var(--gray);
+    border: 1px solid var(--border);
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    color: var(--white);
+    transition: color 0.2s;
+  }
+
+  .article-card:hover .card-title { color: var(--lime); }
+
+  .card-excerpt {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #555;
+    letter-spacing: 1px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .card-meta span { color: var(--lime); }
+
+  .card-stars {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--lime);
+    background: rgba(200,255,0,0.08);
+    padding: 4px 10px;
+    border: 1px solid rgba(200,255,0,0.2);
+  }
+
+  /* ===== ARTICLES ===== */
+  #articles .articles-section {
+    padding: 80px 40px;
+  }
+
+  .search-bar {
+    position: relative;
+    margin-bottom: 48px;
+  }
+
+  .search-bar input {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 16px 20px 16px 48px;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .search-bar input::placeholder { color: #444; }
+  .search-bar input:focus { border-color: var(--lime); }
+
+  .search-bar::before {
+    content: '⌕';
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--lime);
+    font-size: 20px;
+    pointer-events: none;
+  }
+
+  /* ===== TUTORIALS ===== */
+  #tutorials .tutorials-section {
+    padding: 80px 40px;
+  }
+
+  .tutorials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2px;
+  }
+
+  .tutorial-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .tutorial-card:hover {
+    border-color: var(--lime);
+    background: #181818;
+  }
+
+  .tutorial-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    color: rgba(200,255,0,0.06);
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .tutorial-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(200,255,0,0.1);
+    border: 1px solid rgba(200,255,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .tutorial-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    color: var(--white);
+  }
+
+  .tutorial-card:hover .tutorial-title { color: var(--lime); }
+
+  .tutorial-desc {
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .tutorial-level {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    padding: 4px 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .level-beginner { background: rgba(180,180,180,0.1); color: #ccc; border: 1px solid rgba(180,180,180,0.3); }
+  .level-intermediate { background: rgba(160,160,160,0.1); color: #aaa; border: 1px solid rgba(160,160,160,0.3); }
+  .level-advanced { background: rgba(120,120,120,0.1); color: #888; border: 1px solid rgba(120,120,120,0.3); }
+
+  /* ===== CONTACT ===== */
+  #contact .contact-section {
+    padding: 80px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .contact-intro {
+    margin-bottom: 60px;
+  }
+
+  .contact-intro p {
+    font-size: 15px;
+    color: var(--gray);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--lime);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 16px 20px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    width: 100%;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--lime);
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder { color: #444; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+
+  .btn-submit {
+    background: var(--lime);
+    color: var(--black);
+    border: none;
+    padding: 18px 40px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-start;
+    margin-top: 16px;
+  }
+
+  .btn-submit:hover {
+    background: var(--white);
+    transform: translateY(-2px);
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 2px;
+    margin-top: 60px;
+    flex-wrap: wrap;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--white);
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .contact-link:hover {
+    border-color: var(--lime);
+    color: var(--lime);
+  }
+
+  .contact-link-icon {
+    font-size: 20px;
+  }
+
+  .contact-link-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .contact-link-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .contact-link-value {
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* FOOTER */
+  footer {
+    background: #080808;
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+    gap: 20px;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--lime);
+    letter-spacing: 3px;
+  }
+
+  .footer-copy {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  .footer-copy span { color: var(--lime); }
+
+  .footer-links {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #444;
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--lime); }
+
+  /* MOBILE NAV MENU */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    background: rgba(10,10,10,0.98);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    z-index: 998;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-menu.open { display: flex; }
+
+  .mobile-menu a {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--gray);
+    text-decoration: none;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .mobile-menu a:hover { color: var(--lime); }
+
+  /* LANG TOGGLE */
+  .lang-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-left: 8px;
+  }
+
+  .lang-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--gray);
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .lang-btn.active {
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 700;
+  }
+
+  .lang-btn:hover:not(.active) {
+    color: var(--lime);
+    background: rgba(176,176,176,0.05);
+  }
+
+  /* TOAST NOTIFICATION */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--lime);
+    color: var(--black);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 16px 24px;
+    letter-spacing: 1px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .hero { padding: 60px 20px 40px; }
+    .hero h1 { font-size: 52px; }
+    .hero-stats { gap: 24px; }
+    .home-articles, #articles .articles-section, #tutorials .tutorials-section { padding: 60px 20px; }
+    .articles-grid, .tutorials-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    #contact .contact-section { padding: 60px 20px; }
+    footer { padding: 30px 20px; flex-direction: column; text-align: center; }
+    .about-strip { padding: 16px 20px; }
+    .section-title { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo" onclick="showSection('home')">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="showSection('home', this)" data-i18n="nav_home">Home</a></li>
+    <li><a href="#" onclick="showSection('articles', this)" data-i18n="nav_articles">Articles</a></li>
+    <li><a href="#" onclick="showSection('tutorials', this)" data-i18n="nav_tutorials">Tutorials</a></li>
+    <li><a href="#" onclick="showSection('contact', this)" data-i18n="nav_contact">Contact</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btnES" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button>
+    </div>
+    <div class="hamburger" onclick="toggleMenu()" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#" onclick="showSection('home'); toggleMenu()" data-i18n="nav_home">Home</a>
+  <a href="#" onclick="showSection('articles'); toggleMenu()" data-i18n="nav_articles">Articles</a>
+  <a href="#" onclick="showSection('tutorials'); toggleMenu()" data-i18n="nav_tutorials">Tutorials</a>
+  <a href="#" onclick="showSection('contact'); toggleMenu()" data-i18n="nav_contact">Contact</a>
+</div>
+
+<!-- ===== HOME ===== -->
+<section id="home" class="active">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-tag" data-i18n="hero_tag">Linux · DevOps · Cloud · RHEL</div>
+      <h1>KNOW YOUR <span class="accent" data-i18n="hero_accent">INFRA</span></h1>
+      <p class="hero-tagline" data-i18n="hero_tagline">BUILD YOUR DREAM</p>
+      <p class="hero-sub" data-i18n="hero_sub">
+        Tutoriales técnicos reales, configuraciones de clusters RHEL, 
+        y guías de DevOps escritas desde el lab — no desde la teoría.
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">48+</span>
+          <span class="stat-label" data-i18n="stat_articles">Artículos</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">12K</span>
+          <span class="stat-label" data-i18n="stat_readers">Lectores / mes</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">RHEL</span>
+          <span class="stat-label" data-i18n="stat_spec">Especialización</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-strip">
+    <p>LINUX SYSADMIN &nbsp;·&nbsp; RHEL CLUSTERING &nbsp;·&nbsp; HIGH AVAILABILITY &nbsp;·&nbsp; PACEMAKER &nbsp;·&nbsp; COROSYNC &nbsp;·&nbsp; AWS &nbsp;·&nbsp; DIGITALOCEAN &nbsp;·&nbsp; DOCKER &nbsp;·&nbsp; CI/CD &nbsp;·&nbsp; LINUX SYSADMIN &nbsp;·&nbsp; RHEL CLUSTERING &nbsp;·&nbsp; HIGH AVAILABILITY &nbsp;·&nbsp; PACEMAKER &nbsp;·&nbsp; COROSYNC &nbsp;·&nbsp; AWS &nbsp;·&nbsp; DIGITALOCEAN &nbsp;·&nbsp; DOCKER &nbsp;·&nbsp; CI/CD</p>
+  </div>
+
+  <div class="home-articles">
+    <div class="section-header">
+      <span class="section-title" data-i18n="home_recent">ARTÍCULOS RECIENTES</span>
+      <span class="section-count">// 03 POSTS</span>
+    </div>
+    <div class="articles-grid">
+      <div class="article-card" onclick="showSection('articles')">
+        <div class="card-tags">
+          <span class="tag">RHEL 9</span>
+          <span class="tag outline">Clustering</span>
+        </div>
+        <div class="card-title" data-i18n="art1_title">CONFIGURAR PACEMAKER EN RHEL 9 DESDE CERO</div>
+        <p class="card-excerpt" data-i18n="art1_excerpt">Guía completa para implementar un cluster de alta disponibilidad con Pacemaker y Corosync en Red Hat Enterprise Linux 9, con outputs reales del lab.</p>
+        <div class="card-meta">
+          <span>MAR 2026</span>
+          <div class="card-stars">★ 1.7K LECTORES</div>
+        </div>
+      </div>
+      <div class="article-card" onclick="showSection('articles')">
+        <div class="card-tags">
+          <span class="tag">AWS</span>
+          <span class="tag outline">Cost Optimization</span>
+        </div>
+        <div class="card-title" data-i18n="art2_title">REDUCIR COSTOS EN AWS SIN SACRIFICAR UPTIME</div>
+        <p class="card-excerpt" data-i18n="art2_excerpt">Estrategias reales de optimización: Reserved Instances, Savings Plans, y cómo estructurar tu arquitectura para pagar solo por lo que usas.</p>
+        <div class="card-meta">
+          <span>FEB 2026</span>
+          <div class="card-stars">★ 1.2K LECTORES</div>
+        </div>
+      </div>
+      <div class="article-card" onclick="showSection('articles')">
+        <div class="card-tags">
+          <span class="tag">Docker</span>
+          <span class="tag outline">DevOps</span>
+        </div>
+        <div class="card-title" data-i18n="art3_title">CI/CD CON GITHUB ACTIONS + DOCKER EN LINUX</div>
+        <p class="card-excerpt" data-i18n="art3_excerpt">Pipeline completo de integración continua para proyectos Linux: desde el Dockerfile hasta el deploy automatizado con GitHub Actions paso a paso.</p>
+        <div class="card-meta">
+          <span>ENE 2026</span>
+          <div class="card-stars">★ 930 LECTORES</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">STACKDEPLOY</div>
+    <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+    <div class="footer-links">
+      <a href="#" onclick="showSection('articles')">Articles</a>
+      <a href="#" onclick="showSection('tutorials')">Tutorials</a>
+      <a href="#" onclick="showSection('contact')">Contact</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== ARTICLES ===== -->
+<section id="articles">
+  <div class="articles-section">
+    <div class="section-header">
+      <span class="section-title" data-i18n="articles_title">TODOS LOS ARTÍCULOS</span>
+      <span class="section-count">// 03 POSTS</span>
+    </div>
+    <div class="search-bar">
+      <input type="text" data-i18n-placeholder="search_placeholder" placeholder="BUSCAR ARTÍCULO..." oninput="filterArticles(this.value)">
+    </div>
+    <div class="articles-grid" id="articlesGrid">
+      <div class="article-card" data-title="configurar pacemaker rhel 9 clustering">
+        <div class="card-tags">
+          <span class="tag">RHEL 9</span>
+          <span class="tag outline">Clustering</span>
+          <span class="tag outline">HA</span>
+        </div>
+        <div class="card-title">CONFIGURAR PACEMAKER EN RHEL 9 DESDE CERO</div>
+        <p class="card-excerpt">Guía completa para implementar un cluster de alta disponibilidad con Pacemaker y Corosync en Red Hat Enterprise Linux 9. Incluye outputs reales del lab, troubleshooting y configuración de fencing.</p>
+        <div class="card-meta">
+          <span>15 MAR 2026</span>
+          <div class="card-stars">★ 1.7K LECTORES</div>
+        </div>
+      </div>
+      <div class="article-card" data-title="reducir costos aws cost optimization savings plan">
+        <div class="card-tags">
+          <span class="tag">AWS</span>
+          <span class="tag outline">Cost Optimization</span>
+          <span class="tag outline">Cloud</span>
+        </div>
+        <div class="card-title">REDUCIR COSTOS EN AWS SIN SACRIFICAR UPTIME</div>
+        <p class="card-excerpt">Estrategias reales de optimización cloud: Reserved Instances vs On-Demand, Savings Plans, Auto Scaling Groups bien configurados y cómo auditar tu factura mes a mes sin sorpresas.</p>
+        <div class="card-meta">
+          <span>28 FEB 2026</span>
+          <div class="card-stars">★ 1.2K LECTORES</div>
+        </div>
+      </div>
+      <div class="article-card" data-title="cicd github actions docker linux pipeline">
+        <div class="card-tags">
+          <span class="tag">Docker</span>
+          <span class="tag outline">CI/CD</span>
+          <span class="tag outline">GitHub Actions</span>
+        </div>
+        <div class="card-title">CI/CD CON GITHUB ACTIONS + DOCKER EN LINUX</div>
+        <p class="card-excerpt">Pipeline completo de integración continua para proyectos Linux. Desde el Dockerfile optimizado hasta el deploy automatizado, con rollback automático y notificaciones en Slack.</p>
+        <div class="card-meta">
+          <span>10 ENE 2026</span>
+          <div class="card-stars">★ 930 LECTORES</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">STACKDEPLOY</div>
+    <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+    <div class="footer-links">
+      <a href="#" onclick="showSection('home')">Home</a>
+      <a href="#" onclick="showSection('tutorials')">Tutorials</a>
+      <a href="#" onclick="showSection('contact')">Contact</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== TUTORIALS ===== -->
+<section id="tutorials">
+  <div class="tutorials-section">
+    <div class="section-header">
+      <span class="section-title" data-i18n="nav_tutorials">TUTORIALES</span>
+      <span class="section-count">// LAB SERIES</span>
+    </div>
+    <div class="tutorials-grid">
+      <div class="tutorial-card">
+        <div class="tutorial-number">01</div>
+        <div class="tutorial-icon">🔴</div>
+        <div class="card-tags" style="margin-bottom:12px">
+          <span class="tutorial-level level-beginner">Beginner</span>
+        </div>
+        <div class="tutorial-title">RHEL 9: INSTALACIÓN Y CONFIGURACIÓN BÁSICA</div>
+        <p class="tutorial-desc">Desde la imagen ISO hasta un servidor listo para producción. Particionado LVM, configuración de red estática, SELinux y hardening básico.</p>
+        <div class="card-meta" style="border-top:1px solid var(--border); padding-top:16px; margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#555">8 CAPÍTULOS</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--lime)">3H APROX</span>
+        </div>
+      </div>
+      <div class="tutorial-card">
+        <div class="tutorial-number">02</div>
+        <div class="tutorial-icon">⚡</div>
+        <div class="card-tags" style="margin-bottom:12px">
+          <span class="tutorial-level level-intermediate">Intermediate</span>
+        </div>
+        <div class="tutorial-title">HIGH AVAILABILITY CON PACEMAKER + COROSYNC</div>
+        <p class="tutorial-desc">Cluster de dos nodos con failover automático, STONITH fencing y recursos compartidos. Todo con outputs reales del entorno de lab.</p>
+        <div class="card-meta" style="border-top:1px solid var(--border); padding-top:16px; margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#555">12 CAPÍTULOS</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--lime)">6H APROX</span>
+        </div>
+      </div>
+      <div class="tutorial-card">
+        <div class="tutorial-number">03</div>
+        <div class="tutorial-icon">🐳</div>
+        <div class="card-tags" style="margin-bottom:12px">
+          <span class="tutorial-level level-intermediate">Intermediate</span>
+        </div>
+        <div class="tutorial-title">DOCKER EN RHEL: CONTENEDORES EN PRODUCCIÓN</div>
+        <p class="tutorial-desc">Podman vs Docker en RHEL 9, Dockerfile optimizados, redes de contenedores y orquestación básica con Docker Compose en entornos empresariales.</p>
+        <div class="card-meta" style="border-top:1px solid var(--border); padding-top:16px; margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#555">10 CAPÍTULOS</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--lime)">5H APROX</span>
+        </div>
+      </div>
+      <div class="tutorial-card">
+        <div class="tutorial-number">04</div>
+        <div class="tutorial-icon">☁️</div>
+        <div class="card-tags" style="margin-bottom:12px">
+          <span class="tutorial-level level-advanced">Advanced</span>
+        </div>
+        <div class="tutorial-title">AWS PARA SYSADMINS LINUX</div>
+        <p class="tutorial-desc">EC2, VPC, IAM, RDS y S3 desde la perspectiva de un sysadmin Linux. Infraestructura como código con Terraform y pipelines de deploy automatizado.</p>
+        <div class="card-meta" style="border-top:1px solid var(--border); padding-top:16px; margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#555">15 CAPÍTULOS</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--lime)">8H APROX</span>
+        </div>
+      </div>
+      <div class="tutorial-card">
+        <div class="tutorial-number">05</div>
+        <div class="tutorial-icon">🔒</div>
+        <div class="card-tags" style="margin-bottom:12px">
+          <span class="tutorial-level level-advanced">Advanced</span>
+        </div>
+        <div class="tutorial-title">SELINUX: SEGURIDAD REAL EN LINUX</div>
+        <p class="tutorial-desc">Más allá de `setenforce 0`. Políticas personalizadas, contextos, booleans y cómo resolver problemas de SELinux sin comprometer la seguridad del servidor.</p>
+        <div class="card-meta" style="border-top:1px solid var(--border); padding-top:16px; margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#555">7 CAPÍTULOS</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--lime)">4H APROX</span>
+        </div>
+      </div>
+      <div class="tutorial-card">
+        <div class="tutorial-number">06</div>
+        <div class="tutorial-icon">⚙️</div>
+        <div class="card-tags" style="margin-bottom:12px">
+          <span class="tutorial-level level-intermediate">Intermediate</span>
+        </div>
+        <div class="tutorial-title">CI/CD COMPLETO CON GITHUB ACTIONS</div>
+        <p class="tutorial-desc">Pipeline profesional: lint, test, build, deploy y rollback automático. Integración con Docker Hub, AWS ECR y notificaciones a Slack en cada stage.</p>
+        <div class="card-meta" style="border-top:1px solid var(--border); padding-top:16px; margin-top:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#555">9 CAPÍTULOS</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--lime)">5H APROX</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">STACKDEPLOY</div>
+    <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+    <div class="footer-links">
+      <a href="#" onclick="showSection('home')">Home</a>
+      <a href="#" onclick="showSection('articles')">Articles</a>
+      <a href="#" onclick="showSection('contact')">Contact</a>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section id="contact">
+  <div class="contact-section">
+    <div class="section-header">
+      <span class="section-title" data-i18n="nav_contact">CONTACTO</span>
+      <span class="section-count" data-i18n="contact_sub">// HABLEMOS</span>
+    </div>
+    <div class="contact-intro">
+      <p data-i18n="contact_intro">¿Tienes un proyecto de infraestructura Linux, necesitas consultoría en RHEL, o quieres colaborar en contenido técnico? Escríbeme directamente.</p>
+    </div>
+
+    <div class="contact-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="form_name">Nombre</label>
+          <input type="text" data-i18n-placeholder="form_name_ph" placeholder="Tu nombre">
+        </div>
+        <div class="form-group">
+          <label data-i18n="form_email">Email</label>
+          <input type="email" data-i18n-placeholder="form_email_ph" placeholder="tu@email.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="form_subject">Asunto</label>
+        <select>
+          <option value="" disabled selected style="color:#444" data-i18n="form_select">Selecciona un tema...</option>
+          <option data-i18n="opt1">Consultoría técnica</option>
+          <option data-i18n="opt2">Colaboración en contenido</option>
+          <option data-i18n="opt3">Proyecto Freelance</option>
+          <option data-i18n="opt4">Pregunta técnica</option>
+          <option data-i18n="opt5">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="form_msg">Mensaje</label>
+        <textarea rows="6" data-i18n-placeholder="form_msg_ph" placeholder="Cuéntame sobre tu proyecto o consulta..."></textarea>
+      </div>
+      <button class="btn-submit" onclick="submitForm()" data-i18n="form_send">ENVIAR MENSAJE →</button>
+    </div>
+
+    <div class="contact-links">
+      <a href="#" class="contact-link">
+        <span class="contact-link-icon">𝕏</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">Twitter / X</span>
+          <span class="contact-link-value">@andresbernal</span>
+        </div>
+      </a>
+      <a href="#" class="contact-link">
+        <span class="contact-link-icon">in</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">LinkedIn</span>
+          <span class="contact-link-value">Andres Bernal</span>
+        </div>
+      </a>
+      <a href="#" class="contact-link">
+        <span class="contact-link-icon">⌥</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">GitHub</span>
+          <span class="contact-link-value">github.com/andresbernal</span>
+        </div>
+      </a>
+      <a href="/cdn-cgi/l/email-protection#8ce4e3e0edccede2e8fee9ffeee9fee2ede0a2e8e9fa" class="contact-link">
+        <span class="contact-link-icon">@</span>
+        <div class="contact-link-text">
+          <span class="contact-link-label">Email directo</span>
+          <span class="contact-link-value"><span class="__cf_email__" data-cfemail="670f080b062706090315021405021509060b49030211">[email&#160;protected]</span></span>
+        </div>
+      </a>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-logo">STACKDEPLOY</div>
+    <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+    <div class="footer-links">
+      <a href="#" onclick="showSection('home')">Home</a>
+      <a href="#" onclick="showSection('articles')">Articles</a>
+      <a href="#" onclick="showSection('tutorials')">Tutorials</a>
+    </div>
+  </footer>
+</section>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===== i18n TRANSLATIONS =====
+  const translations = {
+    es: {
+      nav_home: 'Home',
+      nav_articles: 'Artículos',
+      nav_tutorials: 'Tutoriales',
+      nav_contact: 'Contacto',
+      hero_tag: 'Linux · DevOps · Cloud · RHEL',
+      hero_accent: 'INFRA',
+      hero_tagline: 'BUILD YOUR DREAM',
+      hero_sub: 'Tutoriales técnicos reales, configuraciones de clusters RHEL, y guías de DevOps escritas desde el lab — no desde la teoría.',
+      stat_articles: 'Artículos',
+      stat_readers: 'Lectores / mes',
+      stat_spec: 'Especialización',
+      home_recent: 'ARTÍCULOS RECIENTES',
+      art1_title: 'CONFIGURAR PACEMAKER EN RHEL 9 DESDE CERO',
+      art1_excerpt: 'Guía completa para implementar un cluster de alta disponibilidad con Pacemaker y Corosync en Red Hat Enterprise Linux 9, con outputs reales del lab.',
+      art2_title: 'REDUCIR COSTOS EN AWS SIN SACRIFICAR UPTIME',
+      art2_excerpt: 'Estrategias reales de optimización: Reserved Instances, Savings Plans, y cómo estructurar tu arquitectura para pagar solo por lo que usas.',
+      art3_title: 'CI/CD CON GITHUB ACTIONS + DOCKER EN LINUX',
+      art3_excerpt: 'Pipeline completo de integración continua para proyectos Linux: desde el Dockerfile hasta el deploy automatizado con GitHub Actions paso a paso.',
+      articles_title: 'TODOS LOS ARTÍCULOS',
+      search_placeholder: 'BUSCAR ARTÍCULO...',
+      contact_sub: '// HABLEMOS',
+      contact_intro: '¿Tienes un proyecto de infraestructura Linux, necesitas consultoría en RHEL, o quieres colaborar en contenido técnico? Escríbeme directamente.',
+      form_name: 'Nombre',
+      form_name_ph: 'Tu nombre',
+      form_email: 'Email',
+      form_email_ph: 'tu@email.com',
+      form_subject: 'Asunto',
+      form_select: 'Selecciona un tema...',
+      opt1: 'Consultoría técnica',
+      opt2: 'Colaboración en contenido',
+      opt3: 'Proyecto Freelance',
+      opt4: 'Pregunta técnica',
+      opt5: 'Otro',
+      form_msg: 'Mensaje',
+      form_msg_ph: 'Cuéntame sobre tu proyecto o consulta...',
+      form_send: 'ENVIAR MENSAJE →',
+      toast_sent: '✓ MENSAJE ENVIADO — TE RESPONDO PRONTO',
+    },
+    en: {
+      nav_home: 'Home',
+      nav_articles: 'Articles',
+      nav_tutorials: 'Tutorials',
+      nav_contact: 'Contact',
+      hero_tag: 'Linux · DevOps · Cloud · RHEL',
+      hero_accent: 'INFRA',
+      hero_tagline: 'BUILD YOUR DREAM',
+      hero_sub: 'Real technical tutorials, RHEL cluster configurations, and DevOps guides written from the lab — not from theory.',
+      stat_articles: 'Articles',
+      stat_readers: 'Readers / month',
+      stat_spec: 'Specialization',
+      home_recent: 'RECENT ARTICLES',
+      art1_title: 'SETTING UP PACEMAKER ON RHEL 9 FROM SCRATCH',
+      art1_excerpt: 'Complete guide to deploying a high-availability cluster with Pacemaker and Corosync on Red Hat Enterprise Linux 9, with real lab outputs.',
+      art2_title: 'CUTTING AWS COSTS WITHOUT SACRIFICING UPTIME',
+      art2_excerpt: 'Real optimization strategies: Reserved Instances, Savings Plans, and how to structure your architecture to pay only for what you use.',
+      art3_title: 'CI/CD WITH GITHUB ACTIONS + DOCKER ON LINUX',
+      art3_excerpt: 'Complete continuous integration pipeline for Linux projects: from Dockerfile to automated deployment with GitHub Actions, step by step.',
+      articles_title: 'ALL ARTICLES',
+      search_placeholder: 'SEARCH ARTICLE...',
+      contact_sub: '// LET\'S TALK',
+      contact_intro: 'Do you have a Linux infrastructure project, need RHEL consulting, or want to collaborate on technical content? Write to me directly.',
+      form_name: 'Name',
+      form_name_ph: 'Your name',
+      form_email: 'Email',
+      form_email_ph: 'you@email.com',
+      form_subject: 'Subject',
+      form_select: 'Select a topic...',
+      opt1: 'Technical consulting',
+      opt2: 'Content collaboration',
+      opt3: 'Freelance project',
+      opt4: 'Technical question',
+      opt5: 'Other',
+      form_msg: 'Message',
+      form_msg_ph: 'Tell me about your project or question...',
+      form_send: 'SEND MESSAGE →',
+      toast_sent: '✓ MESSAGE SENT — I\'LL GET BACK TO YOU SOON',
+    }
+  };
+
+  let currentLang = 'es';
+
+  function setLang(lang) {
+    currentLang = lang;
+    const t = translations[lang];
+
+    // Update text content
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (t[key] !== undefined) el.placeholder = t[key];
+    });
+
+    // Update html lang
+    document.documentElement.lang = lang;
+
+    // Toggle button states
+    document.getElementById('btnES').classList.toggle('active', lang === 'es');
+    document.getElementById('btnEN').classList.toggle('active', lang === 'en');
+
+    // Animate transition
+    document.body.style.opacity = '0.6';
+    setTimeout(() => { document.body.style.opacity = '1'; }, 150);
+  }
+
+  // ===== NAV & ROUTING =====
+  function showSection(id, linkEl) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    if (linkEl) linkEl.classList.add('active');
+    window.scrollTo(0, 0);
+    return false;
+  }
+
+  function toggleMenu() {
+    const menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('open');
+  }
+
+  function filterArticles(query) {
+    const cards = document.querySelectorAll('#articlesGrid .article-card');
+    const q = query.toLowerCase();
+    cards.forEach(card => {
+      const text = card.getAttribute('data-title') + ' ' + card.innerText.toLowerCase();
+      card.style.display = text.includes(q) ? '' : 'none';
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function submitForm() {
+    showToast(translations[currentLang].toast_sent);
+  }
+
+  // Nav active state on nav clicks
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Smooth opacity transition for lang switch
+  document.body.style.transition = 'opacity 0.15s ease';
+</script>
