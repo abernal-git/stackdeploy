@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StackDeploy — Know Your Infra. Build Your Dream.</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --black:#0a0a0a; --accent:#b0b0b0; --white:#f0f0f0; --gray:#888; --border:#222; --card:#141414; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; }
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:var(--accent); text-decoration:none; }
+  .hero { min-height:80vh; display:flex; align-items:center; padding:80px 40px; background:radial-gradient(ellipse 60% 50% at 70% 50%, rgba(176,176,176,0.04) 0%, transparent 70%); }
+  .hero h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(56px,10vw,120px); line-height:0.9; }
+  .hero-accent { color:var(--accent); display:block; }
+  .hero-tagline { font-family:'Bebas Neue',sans-serif; font-size:clamp(24px,4vw,48px); color:var(--accent); letter-spacing:6px; margin-top:8px; opacity:0.8; }
+  .hero-sub { font-size:16px; color:var(--gray); max-width:500px; margin:24px 0 0; line-height:1.7; }
+  .articles { padding:80px 40px; }
+  .section-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:48px; border-bottom:1px solid var(--border); padding-bottom:20px; }
+  .section-title { font-family:'Bebas Neue',sans-serif; font-size:48px; letter-spacing:2px; }
+  .articles-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:2px; }
+  .article-card { background:var(--card); border:1px solid var(--border); padding:32px; cursor:pointer; transition:all 0.3s; position:relative; overflow:hidden; }
+  .article-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:0; background:var(--accent); transition:height 0.3s; }
+  .article-card:hover { background:#181818; transform:translateY(-2px); }
+  .article-card:hover::before { height:100%; }
+  .card-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white); background:#2a2a2a; padding:3px 8px; letter-spacing:1px; text-transform:uppercase; border:1px solid #3a3a3a; }
+  .tag.outline { background:transparent; color:var(--gray); border:1px solid var(--border); }
+  .card-title { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:1px; line-height:1.1; margin-bottom:12px; transition:color 0.2s; }
+  .article-card:hover .card-title { color:var(--accent); }
+  .card-excerpt { font-size:13px; color:var(--gray); line-height:1.7; margin-bottom:24px; }
+  .card-meta { display:flex; align-items:center; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10px; color:#555; border-top:1px solid var(--border); padding-top:16px; }
+  .read-more { color:var(--accent); text-decoration:none; font-size:10px; letter-spacing:1px; }
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+</nav>
+<section class="hero">
+  <div>
+    <h1>KNOW YOUR <span class="hero-accent">INFRA</span></h1>
+    <p class="hero-tagline">BUILD YOUR DREAM</p>
+    <p class="hero-sub">Real technical tutorials, RHEL cluster configurations, and DevOps guides written from the lab.</p>
+  </div>
+</section>
+<section class="articles">
+  <div class="section-header">
+    <span class="section-title">ARTICLES</span>
+    <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--accent)">// 1 POSTS</span>
+  </div>
+  <div class="articles-grid">
+    <!-- ARTICLES_START -->
+    
+        <div class="article-card" onclick="window.location='/articles/cmo-instalar-y-configurar-rhel-9-paso-a-paso.html'">
+          <div class="card-tags">
+            <span class="tag"></span>
+            <span class="tag outline">Beginner</span>
+          </div>
+          <div class="card-title">Cómo instalar y configurar RHEL 9 paso a paso</div>
+          <p class="card-excerpt">Guía completa para instalar y configurar RHEL 9 desde cero. Particionado LVM, red estática, SELinux y hardening básico con outputs reales del lab.</p>
+          <div class="card-meta">
+            <span>2026-03-19</span>
+            <a href="/articles/cmo-instalar-y-configurar-rhel-9-paso-a-paso.html" class="read-more">READ MORE →</a>
+          </div>
+        </div>
+    <!-- ARTICLES_END -->
+  </div>
+</section>
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+</body>
+</html>
