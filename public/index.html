@@ -27,6 +27,7 @@
 html { scroll-behavior:smooth; }
 
 body {
+  transition: opacity 0.15s ease;
   background: var(--bg);
   color: var(--white);
   font-family: 'DM Mono', monospace;
@@ -479,7 +480,11 @@ footer {
     <li><a href="/contact.html">Contact</a></li>
   </ul>
   <div class="nav-right">
-    <span class="nav-tag">BETA</span>
+  <div style="display:flex;border:1px solid var(--border);overflow:hidden;">
+    <button id="btnES" onclick="setLang('es')" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);background:transparent;border:none;padding:6px 12px;cursor:pointer;letter-spacing:2px;transition:all 0.2s;">ES</button>
+    <button id="btnEN" onclick="setLang('en')" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bg);background:var(--accent);border:none;padding:6px 12px;cursor:pointer;letter-spacing:2px;font-weight:700;transition:all 0.2s;">EN</button>
+  </div>
+    
     <div class="hamburger" id="hamburger">
       <span></span><span></span><span></span>
     </div>
@@ -525,7 +530,7 @@ footer {
       </p>
       <div class="avatar-skills">
         <span class="skill-tag">RHEL 9</span>
-        <span class="skill-tag">NETWORKING</span>
+        <span class="skill-tag">Pacemaker</span>
         <span class="skill-tag">Docker</span>
         <span class="skill-tag">Ansible</span>
         <span class="skill-tag">AWS</span>
@@ -536,7 +541,7 @@ footer {
       <div class="avatar-links">
         <a href="https://github.com/abernal-git" target="_blank" class="avatar-link">⌥ GitHub</a>
         <a href="https://www.linkedin.com/in/andrés-isaac-bernal-de-jesús-39193312a/" target="_blank" class="avatar-link">in LinkedIn</a>
-        <a href="mailto:andresjobs.bernal@gmail.com" class="avatar-link">@ Email</a>
+        <a href="/cdn-cgi/l/email-protection#7c1d12180e190f16131e0f521e190e121d103c1b111d1510521f1311" class="avatar-link">@ Email</a>
       </div>
     </div>
   </div>
@@ -544,8 +549,8 @@ footer {
 
 <div class="ticker">
   <div class="ticker-inner">
-    <div class="ticker-item">RHEL 9 <span style="opacity:0">x</span> HIGH AVAILABILITY <span style="opacity:0">x</span> NETWORKING <span style="opacity:0">x</span> SCRIPTING <span style="opacity:0">x</span> DOCKER <span style="opacity:0">x</span> ANSIBLE <span style="opacity:0">x</span> CI/CD <span style="opacity:0">x</span> AZURE <span style="opacity:0">x</span> AWS <span style="opacity:0">x</span> KUBERNETES <span style="opacity:0">x</span> SELINUX <span style="opacity:0">x</span> TERRAFORM</div>
-    <div class="ticker-item">RHEL 9 <span style="opacity:0">x</span> HIGH AVAILABILITY <span style="opacity:0">x</span> NETWORKING <span style="opacity:0">x</span> SCRIPTING <span style="opacity:0">x</span> DOCKER <span style="opacity:0">x</span> ANSIBLE <span style="opacity:0">x</span> CI/CD <span style="opacity:0">x</span> AZURE <span style="opacity:0">x</span> AWS <span style="opacity:0">x</span> KUBERNETES <span style="opacity:0">x</span> SELINUX <span style="opacity:0">x</span> TERRAFORM</div>
+    <div class="ticker-item">RHEL 9 <span style="opacity:0">x</span> HIGH AVAILABILITY <span style="opacity:0">x</span> PACEMAKER <span style="opacity:0">x</span> COROSYNC <span style="opacity:0">x</span> DOCKER <span style="opacity:0">x</span> ANSIBLE <span style="opacity:0">x</span> CI/CD <span style="opacity:0">x</span> AZURE <span style="opacity:0">x</span> AWS <span style="opacity:0">x</span> KUBERNETES <span style="opacity:0">x</span> SELINUX <span style="opacity:0">x</span> TERRAFORM</div>
+    <div class="ticker-item">RHEL 9 <span style="opacity:0">x</span> HIGH AVAILABILITY <span style="opacity:0">x</span> PACEMAKER <span style="opacity:0">x</span> COROSYNC <span style="opacity:0">x</span> DOCKER <span style="opacity:0">x</span> ANSIBLE <span style="opacity:0">x</span> CI/CD <span style="opacity:0">x</span> AZURE <span style="opacity:0">x</span> AWS <span style="opacity:0">x</span> KUBERNETES <span style="opacity:0">x</span> SELINUX <span style="opacity:0">x</span> TERRAFORM</div>
   </div>
 </div>
 
@@ -610,7 +615,70 @@ footer {
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+const t = {
+  es: {
+    nav_home: 'Home', nav_articles: 'Artículos', nav_contact: 'Contacto',
+    hero_eyebrow: 'Linux · DevOps · Cloud · RHEL',
+    hero_tagline: 'Construye tu Sueño',
+    hero_sub: 'Tutoriales técnicos reales, configuraciones de clusters RHEL, y guías de DevOps escritas desde el lab.',
+    stat_articles: 'Artículos', stat_readers: 'Lectores / mes', stat_spec: 'Especialización',
+    latest: 'ARTÍCULOS RECIENTES', all_articles: 'TODOS LOS ARTÍCULOS',
+    search_ph: 'Buscar artículos...', contact_title: 'CONTACTO',
+    contact_sub: 'Proyecto de infraestructura Linux, consultoría RHEL, o colaboración en contenido? Escríbeme.',
+    form_name: 'Nombre', form_email: 'Email', form_subject: 'Asunto', form_msg: 'Mensaje',
+    form_send: 'ENVIAR MENSAJE', form_name_ph: 'Tu nombre', form_msg_ph: 'Cuéntame sobre tu proyecto...',
+    select_ph: 'Selecciona un tema...', opt1: 'Consultoría técnica', opt2: 'Colaboración de contenido',
+    opt3: 'Proyecto Freelance', opt4: 'Pregunta técnica', opt5: 'Otro',
+    built: 'CONSTRUIDO DESDE EL LAB.', built_p: 'Cada artículo en StackDeploy viene de configuraciones reales de lab.',
+    years: 'Años exp.', certified: 'Certificado', verified: 'Verificado en lab', based: 'Basado en México',
+    read_more: 'LEER MÁS', all_btn: 'Todos', filter_label: 'Filtrar',
+    footer_copy: '© 2026 ANDRES BERNAL — TODOS LOS DERECHOS RESERVADOS',
+    avatar_bio: 'Ingeniero Linux & Cloud. Especialista RHEL.\nTutoriales reales desde el lab.',
+  },
+  en: {
+    nav_home: 'Home', nav_articles: 'Articles', nav_contact: 'Contact',
+    hero_eyebrow: 'Linux · DevOps · Cloud · RHEL',
+    hero_tagline: 'Build Your Dream',
+    hero_sub: 'Real technical tutorials, RHEL cluster configurations, and DevOps guides written from the lab — not from theory.',
+    stat_articles: 'Articles', stat_readers: 'Readers / mo', stat_spec: 'Specialization',
+    latest: 'LATEST ARTICLES', all_articles: 'ALL ARTICLES',
+    search_ph: 'Search articles...', contact_title: 'CONTACT',
+    contact_sub: 'Linux infrastructure project, RHEL consulting, or content collaboration? Reach out directly.',
+    form_name: 'Name', form_email: 'Email', form_subject: 'Subject', form_msg: 'Message',
+    form_send: 'SEND MESSAGE', form_name_ph: 'Your name', form_msg_ph: 'Tell me about your project...',
+    select_ph: 'Select a topic...', opt1: 'Technical consulting', opt2: 'Content collaboration',
+    opt3: 'Freelance project', opt4: 'Technical question', opt5: 'Other',
+    built: 'BUILT FROM THE LAB.', built_p: 'Every article on StackDeploy comes from real lab configurations.',
+    years: 'Years exp.', certified: 'Certified', verified: 'Lab verified', based: 'Based in Mexico',
+    read_more: 'READ MORE', all_btn: 'All', filter_label: 'Filter',
+    footer_copy: '© 2026 ANDRES BERNAL — ALL RIGHTS RESERVED',
+    avatar_bio: 'Linux & Cloud Engineer. RHEL specialist.\nReal tutorials from real labs.',
+  }
+};
+
+let lang = 'en';
+
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.getElementById('btnES').style.background = l==='es' ? 'var(--accent)' : 'transparent';
+  document.getElementById('btnES').style.color = l==='es' ? 'var(--bg)' : 'var(--gray)';
+  document.getElementById('btnEN').style.background = l==='en' ? 'var(--accent)' : 'transparent';
+  document.getElementById('btnEN').style.color = l==='en' ? 'var(--bg)' : 'var(--gray)';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[l][key]) el.textContent = t[l][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (t[l][key]) el.placeholder = t[l][key];
+  });
+  document.body.style.opacity = '0.7';
+  setTimeout(() => document.body.style.opacity = '1', 150);
+}
+
 // Custom cursor
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursorRing');
@@ -623,10 +691,4 @@ document.querySelectorAll('a, button').forEach(el => {
 });
 
 // Hamburger
-document.getElementById('hamburger').addEventListener('click', () => {
-  const nav = document.querySelector('.nav-links');
-  nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
-});
-</script>
-</body>
-</html>
+document.getElementById('hamburger').addEventListener('click', ()

@@ -96,7 +96,11 @@ footer{border-top:1px solid var(--border);padding:32px 48px;display:flex;align-i
     <li><a href="/contact.html">Contact</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:16px;">
-    <span class="nav-tag">BETA</span>
+  <div style="display:flex;border:1px solid var(--border);overflow:hidden;">
+    <button id="btnES" onclick="setLang('es')" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray);background:transparent;border:none;padding:6px 12px;cursor:pointer;letter-spacing:2px;transition:all 0.2s;">ES</button>
+    <button id="btnEN" onclick="setLang('en')" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--bg);background:var(--accent);border:none;padding:6px 12px;cursor:pointer;letter-spacing:2px;font-weight:700;transition:all 0.2s;">EN</button>
+  </div>
+    
     <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
   </div>
 </nav>
@@ -147,6 +151,69 @@ footer{border-top:1px solid var(--border);padding:32px 48px;display:flex;align-i
 </footer>
 
 <script>
+
+const t = {
+  es: {
+    nav_home: 'Home', nav_articles: 'Artículos', nav_contact: 'Contacto',
+    hero_eyebrow: 'Linux · DevOps · Cloud · RHEL',
+    hero_tagline: 'Construye tu Sueño',
+    hero_sub: 'Tutoriales técnicos reales, configuraciones de clusters RHEL, y guías de DevOps escritas desde el lab.',
+    stat_articles: 'Artículos', stat_readers: 'Lectores / mes', stat_spec: 'Especialización',
+    latest: 'ARTÍCULOS RECIENTES', all_articles: 'TODOS LOS ARTÍCULOS',
+    search_ph: 'Buscar artículos...', contact_title: 'CONTACTO',
+    contact_sub: 'Proyecto de infraestructura Linux, consultoría RHEL, o colaboración en contenido? Escríbeme.',
+    form_name: 'Nombre', form_email: 'Email', form_subject: 'Asunto', form_msg: 'Mensaje',
+    form_send: 'ENVIAR MENSAJE', form_name_ph: 'Tu nombre', form_msg_ph: 'Cuéntame sobre tu proyecto...',
+    select_ph: 'Selecciona un tema...', opt1: 'Consultoría técnica', opt2: 'Colaboración de contenido',
+    opt3: 'Proyecto Freelance', opt4: 'Pregunta técnica', opt5: 'Otro',
+    built: 'CONSTRUIDO DESDE EL LAB.', built_p: 'Cada artículo en StackDeploy viene de configuraciones reales de lab.',
+    years: 'Años exp.', certified: 'Certificado', verified: 'Verificado en lab', based: 'Basado en México',
+    read_more: 'LEER MÁS', all_btn: 'Todos', filter_label: 'Filtrar',
+    footer_copy: '© 2026 ANDRES BERNAL — TODOS LOS DERECHOS RESERVADOS',
+    avatar_bio: 'Ingeniero Linux & Cloud. Especialista RHEL.\nTutoriales reales desde el lab.',
+  },
+  en: {
+    nav_home: 'Home', nav_articles: 'Articles', nav_contact: 'Contact',
+    hero_eyebrow: 'Linux · DevOps · Cloud · RHEL',
+    hero_tagline: 'Build Your Dream',
+    hero_sub: 'Real technical tutorials, RHEL cluster configurations, and DevOps guides written from the lab — not from theory.',
+    stat_articles: 'Articles', stat_readers: 'Readers / mo', stat_spec: 'Specialization',
+    latest: 'LATEST ARTICLES', all_articles: 'ALL ARTICLES',
+    search_ph: 'Search articles...', contact_title: 'CONTACT',
+    contact_sub: 'Linux infrastructure project, RHEL consulting, or content collaboration? Reach out directly.',
+    form_name: 'Name', form_email: 'Email', form_subject: 'Subject', form_msg: 'Message',
+    form_send: 'SEND MESSAGE', form_name_ph: 'Your name', form_msg_ph: 'Tell me about your project...',
+    select_ph: 'Select a topic...', opt1: 'Technical consulting', opt2: 'Content collaboration',
+    opt3: 'Freelance project', opt4: 'Technical question', opt5: 'Other',
+    built: 'BUILT FROM THE LAB.', built_p: 'Every article on StackDeploy comes from real lab configurations.',
+    years: 'Years exp.', certified: 'Certified', verified: 'Lab verified', based: 'Based in Mexico',
+    read_more: 'READ MORE', all_btn: 'All', filter_label: 'Filter',
+    footer_copy: '© 2026 ANDRES BERNAL — ALL RIGHTS RESERVED',
+    avatar_bio: 'Linux & Cloud Engineer. RHEL specialist.\nReal tutorials from real labs.',
+  }
+};
+
+let lang = 'en';
+
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.getElementById('btnES').style.background = l==='es' ? 'var(--accent)' : 'transparent';
+  document.getElementById('btnES').style.color = l==='es' ? 'var(--bg)' : 'var(--gray)';
+  document.getElementById('btnEN').style.background = l==='en' ? 'var(--accent)' : 'transparent';
+  document.getElementById('btnEN').style.color = l==='en' ? 'var(--bg)' : 'var(--gray)';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[l][key]) el.textContent = t[l][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (t[l][key]) el.placeholder = t[l][key];
+  });
+  document.body.style.opacity = '0.7';
+  setTimeout(() => document.body.style.opacity = '1', 150);
+}
+
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursorRing');
 let mx=0,my=0,rx=0,ry=0;
