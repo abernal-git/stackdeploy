@@ -1,0 +1,11 @@
+{
+  "title": "Linux Directory Structure and File Systems in RHEL 10",
+  "slug": "linux-directory-structure-and-file-systems-in-rhel-10",
+  "category": "RHEL / Linux",
+  "publish_date": "2026-03-22",
+  "excerpt": "Learn how Linux directory structure and file systems work in RHEL 10. A complete guide covering FHS, top-level directories, static vs dynamic data, and real lab examples.",
+  "social_text": "NEW POST",
+  "approved_by": "Andres Bernal",
+  "approved_at": "2026-03-22 23:47:11",
+  "status": "ready"
+}

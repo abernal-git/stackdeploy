@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Directory Structure and File Systems in RHEL 10 | StackDeploy</title>
+<meta name="description" content="Learn how Linux directory structure and file systems work in RHEL 10. A complete guide covering FHS, top-level directories, static vs dynamic data, and real lab examples.">
+<meta name="keywords" content="linux directory structure, rhel 10 file system, filesystem hierarchy standard, linux fhs, rhel 10 directories, linux root directory, linux sysadmin">
+<meta name="author" content="Andres Bernal">
+<meta property="og:title" content="Linux Directory Structure and File Systems in RHEL 10">
+<meta property="og:description" content="Learn how Linux directory structure and file systems work in RHEL 10. A complete guide covering FHS, top-level directories, static vs dynamic data, and real lab examples.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://stackdeploy.dev/articles/linux-directory-structure-and-file-systems-in-rhel-10">
+<link rel="canonical" href="https://stackdeploy.dev/articles/linux-directory-structure-and-file-systems-in-rhel-10">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --dark: #111; --card: #141414;
+    --accent: #b0b0b0; --white: #f0f0f0; --gray: #888; --border: #222;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; line-height:1.8; }
+
+  /* NAV */
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+    color:var(--accent); text-decoration:none; }
+  .nav-links { display:flex; gap:8px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; padding:8px 16px; border:1px solid transparent;
+    transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
+  .nav-links a:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ARTICLE */
+  .article-wrapper { max-width:780px; margin:0 auto; padding:100px 40px 80px; }
+
+  .article-meta { margin-bottom:40px; }
+  .meta-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .meta-tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white);
+    background:#2a2a2a; padding:4px 10px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid #3a3a3a; }
+  .meta-tag.accent { background:var(--accent); color:var(--black); border-color:var(--accent); }
+  .article-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,6vw,64px);
+    line-height:1; letter-spacing:1px; color:var(--white); margin-bottom:16px; }
+  .article-excerpt { font-size:16px; color:var(--gray); line-height:1.7;
+    font-weight:300; margin-bottom:24px; border-left:3px solid var(--accent); padding-left:20px; }
+  .article-info { display:flex; gap:24px; font-family:'Space Mono',monospace;
+    font-size:11px; color:#555; flex-wrap:wrap; }
+  .article-info span { color:var(--accent); }
+
+  /* CONTENT */
+  .article-content { border-top:1px solid var(--border); padding-top:48px; }
+  .article-content h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; margin:48px 0 16px; color:var(--accent); }
+  .article-content h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; margin:40px 0 16px;
+    color:var(--white); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .article-content h3 { font-family:'Bebas Neue',sans-serif; font-size:24px; margin:32px 0 12px; color:var(--accent); }
+  .article-content h4 { font-size:16px; font-weight:600; margin:24px 0 8px; color:var(--white); }
+  .article-content p { font-size:15px; color:#ccc; margin-bottom:20px; line-height:1.8; }
+  .article-content ul { margin:16px 0 24px 0; padding-left:0; list-style:none; }
+  .article-content li { font-size:15px; color:#ccc; padding:6px 0 6px 20px;
+    border-left:2px solid var(--border); margin-bottom:4px; position:relative; }
+  .article-content li::before { content:'→'; position:absolute; left:-20px; color:var(--accent); }
+  .article-content hr { border:none; border-top:1px solid var(--border); margin:40px 0; }
+  .article-content strong { color:var(--white); font-weight:600; }
+  .article-content em { color:var(--accent); font-style:italic; }
+  .article-content a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(176,176,176,0.3); }
+  .article-content a:hover { border-bottom-color:var(--accent); }
+  .article-content code { font-family:'Space Mono',monospace; font-size:12px;
+    background:#1a1a1a; color:var(--accent); padding:2px 6px; border:1px solid var(--border); }
+
+  /* CODE BLOCKS */
+  .code-block { background:#0d0d0d; border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+  .code-header { display:flex; align-items:center; justify-content:space-between;
+    padding:8px 16px; background:#111; border-bottom:1px solid var(--border); }
+  .code-lang { font-family:'Space Mono',monospace; font-size:10px; color:var(--accent);
+    letter-spacing:2px; text-transform:uppercase; }
+  .copy-btn { font-family:'Space Mono',monospace; font-size:9px; color:var(--gray);
+    background:transparent; border:1px solid var(--border); padding:4px 10px;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .code-block pre { padding:20px; overflow-x:auto; }
+  .code-block code { background:transparent; border:none; padding:0;
+    font-size:13px; color:#e0e0e0; line-height:1.6; }
+
+  /* FOOTER */
+  .article-footer { margin-top:80px; padding-top:40px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .back-link { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border); padding:10px 20px; transition:all 0.2s; }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); }
+  .author-block { font-family:'Space Mono',monospace; font-size:11px; color:#555; }
+  .author-block span { color:var(--accent); }
+
+  /* PAGE FOOTER */
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+
+  @media(max-width:768px) {
+    nav { padding:0 20px; } .nav-links { display:none; }
+    .article-wrapper { padding:90px 20px 60px; }
+    footer { padding:24px 20px; flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/articles">Articles</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrapper">
+  <div class="article-meta">
+    <div class="meta-tags">
+      <span class="meta-tag accent"></span>
+      <span class="meta-tag">Beginner</span>
+      <span class="meta-tag">7 MIN READ</span>
+    </div>
+    <h1 class="article-title">Linux Directory Structure and File Systems in RHEL 10</h1>
+    <p class="article-excerpt">Learn how Linux directory structure and file systems work in RHEL 10. A complete guide covering FHS, top-level directories, static vs dynamic data, and real lab examples.</p>
+    <div class="article-info">
+      <span>BY <span>Andres Bernal (@abernal093)</span></span>
+      <span>PUBLISHED <span>2026-03-22</span></span>
+      <span>STACKDEPLOY.DEV</span>
+    </div>
+  </div>
+
+  <div class="article-content">
+    <h1>Linux Directory Structure and File Systems in RHEL 10</h1>
+
+<p>If you have ever gotten lost navigating a Linux server or wondered why files are stored where they are, this guide is for you. Understanding the Linux directory structure is one of the most fundamental skills for any sysadmin — and in Red Hat Enterprise Linux 10, it follows a well-defined standard that makes administration predictable and consistent across systems.</p>
+
+<hr>
+
+<h2>What is the Linux File System Structure?</h2>
+
+<p>Linux uses a <strong>hierarchical file structure</strong> that simplifies both administration and file management. This structure is made up of directories organized within larger containers called <strong>file systems</strong>.</p>
+
+<p>Red Hat Enterprise Linux follows the <strong>Filesystem Hierarchy Standard (FHS)</strong> — a specification that defines names, locations, and permissions for file types and directories across Linux distributions. Following FHS means that whether you are on RHEL 10, Rocky Linux, or any other Red Hat-compatible system, the structure is consistent and predictable.</p>
+
+<hr>
+
+<h2>The Inverted Tree Model</h2>
+
+<p>The Linux directory structure resembles an <strong>inverted tree</strong>:</p>
+
+<ul>
+<li>The <strong>root</strong> (<code>/</code>) is at the top — the trunk of the tree</li>
+<li><strong>Subdirectories</strong> are the branches</li>
+<li><strong>Files</strong> are the leaves at the end of each branch</li>
+</ul>
+
+<p>The root directory is represented by the forward slash character <code>/</code>, and this is where the entire directory structure connects. Every single file and directory on a Linux system lives under <code>/</code>.</p>
+
+<p>The forward slash also serves as a <strong>directory separator</strong> in pathnames. For example:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">/etc/rc.d/init.d/README</code></pre></div>
+
+<p>Breaking this down:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">/           → root (parent of everything)
+└── etc     → child of /
+    └── rc.d    → child of etc
+        └── init.d  → child of rc.d
+            └── README  → file (leaf)</code></pre></div>
+
+<p>Lab output — navigating this path on a RHEL 10 system:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /etc/rc.d/
+init.d  rc0.d  rc1.d  rc2.d  rc3.d  rc4.d  rc5.d  rc6.d</code></pre></div>
+
+<hr>
+
+<h2>Parent and Child Directories</h2>
+
+<p>Every directory in Linux has a relationship with the directories around it:</p>
+
+<ul>
+<li>Every directory has a <strong>parent directory</strong> above it</li>
+<li>Every directory can have <strong>child directories</strong> below it</li>
+<li>The only exception is the <strong>root directory</strong> (<code>/</code>) which has no parent</li>
+<li>The lowest-level subdirectories have no children — only files</li>
+</ul>
+
+<p>You can always confirm the parent of your current location using:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# pwd
+/home/abernal/projects
+ 
+[root@rhel10 ~]# ls ..
+abernal  guest</code></pre></div>
+
+<p>The <code>..</code> always refers to the parent directory.</p>
+
+<hr>
+
+<h2>Static vs Dynamic Data</h2>
+
+<p>Before looking at the top-level directories, it helps to understand the two types of data they contain:</p>
+
+<p><strong>Static data</strong> — content that remains unchanged unless explicitly modified by an administrator or package manager. Examples include:</p>
+<ul>
+<li>System binaries and commands</li>
+<li>Configuration files</li>
+<li>Library routines</li>
+<li>Kernel files</li>
+</ul>
+
+<p><strong>Dynamic (variable) data</strong> — content that is modified and updated automatically by system processes during normal operation. Examples include:</p>
+<ul>
+<li>Log files</li>
+<li>Process status files</li>
+<li>Temporary files</li>
+<li>Lock files</li>
+</ul>
+
+<p>This distinction matters because static directories can be mounted read-only for security, while dynamic directories must always be writable.</p>
+
+<hr>
+
+<h2>Top-Level Directories Under `/`</h2>
+
+<p>Here are the key top-level directories in a RHEL 10 system:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /
+afs  boot  etc   lib    media  opt   root  srv  tmp  var
+bin  dev   home  lib64  mnt    proc  run   sys  usr</code></pre></div>
+
+<h3>`/bin` and `/sbin` → `/usr/bin` and `/usr/sbin`</h3>
+
+<p>In RHEL 10 (following modern FHS), <code>/bin</code> and <code>/sbin</code> are symbolic links to <code>/usr/bin</code> and <code>/usr/sbin</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls -la / | grep bin
+lrwxrwxrwx.   1 root root    7 Jan  1 00:00 bin -&gt; usr/bin
+lrwxrwxrwx.   1 root root    8 Jan  1 00:00 sbin -&gt; usr/sbin</code></pre></div>
+
+<p>These contain essential user and system administration commands available to all users.</p>
+
+<h3>`/etc` — Configuration Files</h3>
+
+<p>The most important directory for sysadmins. Contains system-wide configuration files:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /etc | head -20
+adjtime
+aliases
+alternatives
+anacrontab
+at.deny
+audit
+bash_completion.d
+bashrc
+cron.d
+cron.daily</code></pre></div>
+
+<p><strong>Static data</strong> — configuration files are only changed by admins or package installs.</p>
+
+<h3>`/var` — Variable Data</h3>
+
+<p>Contains data that changes constantly during system operation:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /var
+account  cache  db  empty  games  lib  local  lock  log  mail  opt  run  spool  tmp  yp</code></pre></div>
+
+<p>Key subdirectories:</p>
+<ul>
+<li><code>/var/log</code> — system and application logs</li>
+<li><code>/var/spool</code> — print and mail queues</li>
+<li><code>/var/tmp</code> — temporary files that persist across reboots</li>
+<li><code>/var/cache</code> — application cache data</li>
+</ul>
+
+<p><strong>Dynamic data</strong> — this directory must always be writable.</p>
+
+<h3>`/home` — User Home Directories</h3>
+
+<p>Each regular user gets a home directory here:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /home
+abernal  guest  testuser</code></pre></div>
+
+<h3>`/root` — Root User Home</h3>
+
+<p>The home directory for the root user — separate from <code>/home</code> to ensure root can always log in even if <code>/home</code> is unmounted:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /root
+anaconda-ks.cfg  original-ks.cfg</code></pre></div>
+
+<h3>`/tmp` — Temporary Files</h3>
+
+<p>For temporary files created by applications. Files here are cleared on reboot:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /tmp
+systemd-private-abc123  tmpfiles-xyz</code></pre></div>
+
+<h3>`/usr` — User Programs and Data</h3>
+
+<p>The largest directory on most systems. Contains installed software, libraries and documentation:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /usr
+bin  games  include  lib  lib64  libexec  local  sbin  share  src  tmp</code></pre></div>
+
+<h3>`/boot` — Boot Files</h3>
+
+<p>Contains the Linux kernel, initial RAM disk, and bootloader configuration:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /boot
+config-5.14.0-427.el10.x86_64
+efi
+grub2
+initramfs-5.14.0-427.el10.x86_64.img
+symvers-5.14.0-427.el10.x86_64.gz
+System.map-5.14.0-427.el10.x86_64
+vmlinuz-5.14.0-427.el10.x86_64</code></pre></div>
+
+<h3>`/dev` — Device Files</h3>
+
+<p>Contains special files representing hardware devices:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /dev | head -10
+autofs  block  bsg  bus  cdrom  char  console  cpu  cpu_dma_latency  disk</code></pre></div>
+
+<h3>`/proc` and `/sys` — Virtual File Systems</h3>
+
+<p>These are <strong>not real directories on disk</strong> — they are virtual file systems that expose kernel and hardware information:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># CPU information
+[root@rhel10 ~]# cat /proc/cpuinfo | head -5
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 85
+model name      : Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
+ 
+# Memory information
+[root@rhel10 ~]# cat /proc/meminfo | head -5
+MemTotal:       16384000 kB
+MemFree:         8192000 kB
+MemAvailable:   10240000 kB
+Buffers:          204800 kB
+Cached:          1638400 kB</code></pre></div>
+
+<h3>`/mnt` and `/media` — Mount Points</h3>
+
+<ul>
+<li><code>/mnt</code> — temporary manual mount points used by administrators</li>
+<li><code>/media</code> — automatic mount points for removable media (USB, CD)</li>
+</ul>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Mounting a disk manually
+[root@rhel10 ~]# mount /dev/sdb1 /mnt
+[root@rhel10 ~]# ls /mnt
+data  backups</code></pre></div>
+
+<h3>`/opt` — Optional Software</h3>
+
+<p>Third-party software that is not part of the standard RHEL distribution installs here:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel10 ~]# ls /opt
+rh  splunk  custom-app</code></pre></div>
+
+<hr>
+
+<h2>Quick Reference Table</h2>
+
+<p>| Directory | Type | Purpose |</p>
+<p>|-----------|------|---------|</p>
+<p>| <code>/</code> | Static | Root of the entire filesystem |</p>
+<p>| <code>/bin</code>, <code>/sbin</code> | Static | Essential commands |</p>
+<p>| <code>/etc</code> | Static | System configuration files |</p>
+<p>| <code>/home</code> | Dynamic | User home directories |</p>
+<p>| <code>/var</code> | Dynamic | Variable data — logs, spools |</p>
+<p>| <code>/tmp</code> | Dynamic | Temporary files (cleared on reboot) |</p>
+<p>| <code>/usr</code> | Static | Installed programs and libraries |</p>
+<p>| <code>/boot</code> | Static | Kernel and bootloader files |</p>
+<p>| <code>/dev</code> | Dynamic | Device files |</p>
+<p>| <code>/proc</code> | Dynamic | Virtual — kernel runtime info |</p>
+<p>| <code>/sys</code> | Dynamic | Virtual — hardware and kernel info |</p>
+<p>| <code>/mnt</code> | Dynamic | Temporary mount points |</p>
+<p>| <code>/opt</code> | Static | Optional third-party software |</p>
+<p>| <code>/root</code> | Dynamic | Root user home directory |</p>
+
+<hr>
+
+<h2>Key Takeaways</h2>
+
+<p>Understanding the Linux directory structure is essential for every sysadmin task — from troubleshooting to security hardening. In RHEL 10 following FHS means:</p>
+
+<ul>
+<li>Configuration changes go in <code>/etc</code></li>
+<li>Logs are always in <code>/var/log</code></li>
+<li>Kernel files live in <code>/boot</code></li>
+<li><code>/bin</code> and <code>/sbin</code> are now symlinks to <code>/usr/bin</code> and <code>/usr/sbin</code></li>
+<li>Virtual filesystems <code>/proc</code> and <code>/sys</code> expose live kernel data</li>
+</ul>
+
+<p>In the next article we will cover file permissions and ownership in RHEL 10 — understanding who can read, write, and execute every file in this directory tree.</p>
+
+<hr>
+
+<p>*Questions? Find me on X as @stackdeploy</p>
+  </div>
+
+  <div class="article-footer">
+    <a href="/" class="back-link">← Back to Articles</a>
+    <div class="author-block">Written by <span>Andres Bernal</span> | <span>@abernal093</span></div>
+  </div>
+</article>
+
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+</script>
+</body>
+</html>
