@@ -1,0 +1,11 @@
+{
+  "title": "File Compression and Archiving with tar, gzip, and bzip2 in RHEL",
+  "slug": "file-compression-and-archiving-with-tar-gzip-and-bzip2-in-rhel",
+  "category": "RHEL / Linux",
+  "publish_date": "2026-03-24",
+  "excerpt": "Learn how to compress and archive files in RHEL using gzip, bzip2, and tar. Real lab examples with commands, options, and RHCSA exam tips included.",
+  "social_text": "",
+  "approved_by": "Andres Bernal",
+  "approved_at": "2026-03-24 09:42:26",
+  "status": "ready"
+}

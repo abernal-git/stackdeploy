@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Compression and Archiving with tar, gzip, and bzip2 in RHEL | StackDeploy</title>
+<meta name="description" content="Learn how to compress and archive files in RHEL using gzip, bzip2, and tar. Real lab examples with commands, options, and RHCSA exam tips included.">
+<meta name="keywords" content="tar gzip bzip2 rhel, linux file compression, tar command rhel, gzip gunzip linux, bzip2 bunzip2, rhcsa compression, linux archive files">
+<meta name="author" content="Andres Bernal">
+<meta property="og:title" content="File Compression and Archiving with tar, gzip, and bzip2 in RHEL">
+<meta property="og:description" content="Learn how to compress and archive files in RHEL using gzip, bzip2, and tar. Real lab examples with commands, options, and RHCSA exam tips included.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://stackdeploy.dev/articles/file-compression-and-archiving-with-tar-gzip-and-bzip2-in-rhel">
+<link rel="canonical" href="https://stackdeploy.dev/articles/file-compression-and-archiving-with-tar-gzip-and-bzip2-in-rhel">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --dark: #111; --card: #141414;
+    --accent: #b0b0b0; --white: #f0f0f0; --gray: #888; --border: #222;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; line-height:1.8; }
+
+  /* NAV */
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+    color:var(--accent); text-decoration:none; }
+  .nav-links { display:flex; gap:8px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; padding:8px 16px; border:1px solid transparent;
+    transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
+  .nav-links a:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ARTICLE */
+  .article-wrapper { max-width:780px; margin:0 auto; padding:100px 40px 80px; }
+
+  .article-meta { margin-bottom:40px; }
+  .meta-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .meta-tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white);
+    background:#2a2a2a; padding:4px 10px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid #3a3a3a; }
+  .meta-tag.accent { background:var(--accent); color:var(--black); border-color:var(--accent); }
+  .article-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,6vw,64px);
+    line-height:1; letter-spacing:1px; color:var(--white); margin-bottom:16px; }
+  .article-excerpt { font-size:16px; color:var(--gray); line-height:1.7;
+    font-weight:300; margin-bottom:24px; border-left:3px solid var(--accent); padding-left:20px; }
+  .article-info { display:flex; gap:24px; font-family:'Space Mono',monospace;
+    font-size:11px; color:#555; flex-wrap:wrap; }
+  .article-info span { color:var(--accent); }
+
+  /* CONTENT */
+  .article-content { border-top:1px solid var(--border); padding-top:48px; }
+  .article-content h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; margin:48px 0 16px; color:var(--accent); }
+  .article-content h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; margin:40px 0 16px;
+    color:var(--white); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .article-content h3 { font-family:'Bebas Neue',sans-serif; font-size:24px; margin:32px 0 12px; color:var(--accent); }
+  .article-content h4 { font-size:16px; font-weight:600; margin:24px 0 8px; color:var(--white); }
+  .article-content p { font-size:15px; color:#ccc; margin-bottom:20px; line-height:1.8; }
+  .article-content ul { margin:16px 0 24px 0; padding-left:0; list-style:none; }
+  .article-content li { font-size:15px; color:#ccc; padding:6px 0 6px 20px;
+    border-left:2px solid var(--border); margin-bottom:4px; position:relative; }
+  .article-content li::before { content:'→'; position:absolute; left:-20px; color:var(--accent); }
+  .article-content hr { border:none; border-top:1px solid var(--border); margin:40px 0; }
+  .article-content strong { color:var(--white); font-weight:600; }
+  .article-content em { color:var(--accent); font-style:italic; }
+  .article-content a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(176,176,176,0.3); }
+  .article-content a:hover { border-bottom-color:var(--accent); }
+  .article-content code { font-family:'Space Mono',monospace; font-size:12px;
+    background:#1a1a1a; color:var(--accent); padding:2px 6px; border:1px solid var(--border); }
+
+  /* CODE BLOCKS */
+  .code-block { background:#0d0d0d; border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+  .code-header { display:flex; align-items:center; justify-content:space-between;
+    padding:8px 16px; background:#111; border-bottom:1px solid var(--border); }
+  .code-lang { font-family:'Space Mono',monospace; font-size:10px; color:var(--accent);
+    letter-spacing:2px; text-transform:uppercase; }
+  .copy-btn { font-family:'Space Mono',monospace; font-size:9px; color:var(--gray);
+    background:transparent; border:1px solid var(--border); padding:4px 10px;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .code-block pre { padding:20px; overflow-x:auto; }
+  .code-block code { background:transparent; border:none; padding:0;
+    font-size:13px; color:#e0e0e0; line-height:1.6; }
+
+  /* FOOTER */
+  .article-footer { margin-top:80px; padding-top:40px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .back-link { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border); padding:10px 20px; transition:all 0.2s; }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); }
+  .author-block { font-family:'Space Mono',monospace; font-size:11px; color:#555; }
+  .author-block span { color:var(--accent); }
+
+  /* PAGE FOOTER */
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+
+  @media(max-width:768px) {
+    nav { padding:0 20px; } .nav-links { display:none; }
+    .article-wrapper { padding:90px 20px 60px; }
+    footer { padding:24px 20px; flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/articles">Articles</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrapper">
+  <div class="article-meta">
+    <div class="meta-tags">
+      <span class="meta-tag accent"></span>
+      <span class="meta-tag">Beginner</span>
+      <span class="meta-tag">7 MIN READ</span>
+    </div>
+    <h1 class="article-title">File Compression and Archiving with tar, gzip, and bzip2 in RHEL</h1>
+    <p class="article-excerpt">Learn how to compress and archive files in RHEL using gzip, bzip2, and tar. Real lab examples with commands, options, and RHCSA exam tips included.</p>
+    <div class="article-info">
+      <span>BY <span>Andres Bernal (@abernal093)</span></span>
+      <span>PUBLISHED <span>2026-03-24</span></span>
+      <span>STACKDEPLOY.DEV</span>
+    </div>
+  </div>
+
+  <div class="article-content">
+    <h1>File Compression and Archiving with tar, gzip, and bzip2 in RHEL</h1>
+
+<p>Compressing and archiving files is one of the most common tasks you will perform as a Linux sysadmin — whether you are backing up configuration files, transferring large directories to remote systems, or preparing data for long-term storage. RHEL provides native tools to handle both tasks efficiently.</p>
+
+<p>In this guide you will learn how to use <code>gzip</code>, <code>bzip2</code>, and <code>tar</code> with real lab examples from a RHEL system.</p>
+
+<hr>
+
+<h2>Why Compress and Archive?</h2>
+
+<p>Compressing one or more large files or an entire directory hierarchy lets you:</p>
+
+<ul>
+<li><strong>Conserve disk space</strong> on the server</li>
+<li><strong>Transfer files faster</strong> over the network</li>
+<li><strong>Bundle hundreds of files</strong> into a single portable archive</li>
+<li><strong>Preserve file attributes</strong> like permissions, ownership, and SELinux contexts</li>
+</ul>
+
+<p>The typical workflow is to archive first with <code>tar</code>, then compress — or do both in a single command.</p>
+
+<hr>
+
+<h2>gzip and gunzip</h2>
+
+<p>The <code>gzip</code>/<code>gunzip</code> pair has been available in Linux for over two decades. It is the most widely used compression tool on RHEL systems.</p>
+
+<h3>How gzip works</h3>
+
+<ul>
+<li>Compresses each specified file and adds the <code>.gz</code> extension</li>
+<li>The original file is replaced by the compressed version</li>
+<li>Use <code>-r</code> to compress an entire directory tree</li>
+<li>Use <code>-l</code> to display compression information about a gzipped file</li>
+</ul>
+
+<h3>Lab — Compressing a file with gzip</h3>
+
+<p>First, copy the <code>/etc/fstab</code> file to the root home directory and verify:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# cp /etc/fstab /root/fstab
+[root@rhel ~]# ls -lh /root/fstab
+-rw-r--r--. 1 root root 617 Mar 24 09:00 fstab</code></pre></div>
+
+<p>Now compress with <code>gzip</code> and confirm:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# gzip fstab
+[root@rhel ~]# ls -lh /root/fstab.gz
+-rw-r--r--. 1 root root 401 Mar 24 09:00 fstab.gz</code></pre></div>
+
+<p>The original file is gone and replaced by <code>fstab.gz</code>. View compression info:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# gzip -l fstab.gz
+         compressed        uncompressed  ratio uncompressed_name
+                401                 617  35.0% fstab</code></pre></div>
+
+<h3>Lab — Decompressing with gunzip</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# gunzip fstab.gz
+[root@rhel ~]# ls -lh /root/fstab
+-rw-r--r--. 1 root root 617 Mar 24 09:00 fstab</code></pre></div>
+
+<p>The file is restored to its original size with the same timestamp and attributes.</p>
+
+<hr>
+
+<h2>bzip2 and bunzip2</h2>
+
+<p>The <code>bzip2</code>/<code>bunzip2</code> pair works similarly to gzip but with a <strong>better compression ratio</strong> — it produces smaller files. The trade-off is that it is slower, especially on large files.</p>
+
+<h3>Lab — Compressing with bzip2</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# bzip2 fstab
+[root@rhel ~]# ls -lh /root/fstab.bz2
+-rw-r--r--. 1 root root 385 Mar 24 09:00 fstab.bz2</code></pre></div>
+
+<p>Notice the <code>.bz2</code> extension. The file is slightly smaller than the gzip version.</p>
+
+<h3>Lab — Decompressing with bunzip2</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# bunzip2 fstab.bz2
+[root@rhel ~]# ls -lh /root/fstab
+-rw-r--r--. 1 root root 617 Mar 24 09:00 fstab</code></pre></div>
+
+<p>File is fully restored with original attributes intact.</p>
+
+<hr>
+
+<h2>gzip vs bzip2 — Which One to Use?</h2>
+
+<p>| Feature | gzip | bzip2 |</p>
+<p>|---------|------|-------|</p>
+<p>| <strong>Speed</strong> | Faster | Slower |</p>
+<p>| <strong>Compression ratio</strong> | Good | Better (smaller files) |</p>
+<p>| <strong>Extension</strong> | <code>.gz</code> | <code>.bz2</code> |</p>
+<p>| <strong>Best for</strong> | Quick compressions, small files | Large files, maximum compression |</p>
+<p>| <strong>Decompress command</strong> | <code>gunzip</code> or <code>gzip -d</code> | <code>bunzip2</code> or <code>bzip2 -d</code> |</p>
+
+<p>For most daily tasks, <code>gzip</code> is the go-to choice. When file size matters more than speed — such as archiving logs for long-term storage — use <code>bzip2</code>.</p>
+
+<hr>
+
+<h2>tar — The Archive Command</h2>
+
+<p>The <code>tar</code> (tape archive) command is used to <strong>create, list, and extract</strong> archives — called tarballs or tarfiles. By itself, <code>tar</code> does not compress. But it can call <code>gzip</code> or <code>bzip2</code> directly to produce a compressed archive in one step.</p>
+
+<h3>Key tar options</h3>
+
+<p>| Option | Description |</p>
+<p>|--------|-------------|</p>
+<p>| <code>-c</code> | Creates a tarball |</p>
+<p>| <code>-f</code> | Specifies the tarball filename |</p>
+<p>| <code>-t</code> | Lists contents of a tarball |</p>
+<p>| <code>-x</code> | Extracts files from a tarball |</p>
+<p>| <code>-v</code> | Verbose mode — shows files being processed |</p>
+<p>| <code>-p</code> | Preserves file permissions |</p>
+<p>| <code>-r</code> | Appends files to an existing uncompressed tarball |</p>
+<p>| <code>-u</code> | Appends only if files are newer than existing archive |</p>
+<p>| <code>-z</code> | Compresses with gzip |</p>
+<p>| <code>-j</code> | Compresses with bzip2 |</p>
+
+<p>> <strong>Note:</strong> The <code>-r</code> and <code>-u</code> options do not work on compressed tarballs.</p>
+
+<hr>
+
+<h2>Lab — Creating and Working with tar Archives</h2>
+
+<h3>Create a tarball of the /home directory</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -cvf /tmp/home.tar /home
+tar: Removing leading '/' from member names
+home/
+home/abernal/
+home/abernal/.bash_profile
+home/abernal/.bashrc
+home/abernal/.bash_logout</code></pre></div>
+
+<p>The first line — <code>tar: Removing leading '/' from member names</code> — is important. By default, <code>tar</code> strips the leading <code>/</code> from paths. This gives you the flexibility to restore files to any location without being forced to use the full original path.</p>
+
+<h3>List contents of a tarball</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -tvf /tmp/home.tar
+drwxr-xr-x root/root         0 2026-03-24 09:00 home/
+drwx------ abernal/abernal   0 2026-03-24 09:00 home/abernal/
+-rw-r--r-- abernal/abernal 141 2026-03-24 09:00 home/abernal/.bash_profile</code></pre></div>
+
+<h3>Archive specific files</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -cvf /tmp/files.tar /etc/fstab /etc/hosts
+tar: Removing leading '/' from member names
+etc/fstab
+etc/hosts</code></pre></div>
+
+<h3>Append files to an existing tarball</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -rvf /tmp/files.tar /etc/yum.repos.d/
+etc/yum.repos.d/
+etc/yum.repos.d/redhat.repo</code></pre></div>
+
+<h3>Extract a single file from a tarball</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -xvf /tmp/files.tar etc/fstab
+etc/fstab
+ 
+[root@rhel ~]# ls -l etc/fstab
+-rw-r--r--. 1 root root 617 Mar 24 09:00 etc/fstab</code></pre></div>
+
+<h3>Extract all files from a tarball</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -xvf /tmp/files.tar
+etc/fstab
+etc/hosts
+etc/yum.repos.d/
+etc/yum.repos.d/redhat.repo</code></pre></div>
+
+<hr>
+
+<h2>Lab — Creating Compressed Archives (tar + gzip/bzip2)</h2>
+
+<p>This is the most common real-world usage — archive and compress in a single command.</p>
+
+<h3>Create a gzip-compressed tarball</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -czvf /tmp/home.tar.gz /home
+tar: Removing leading '/' from member names
+home/
+home/abernal/
+home/abernal/.bash_profile</code></pre></div>
+
+<h3>Create a bzip2-compressed tarball</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -cjvf /tmp/home.tar.bz2 /home
+tar: Removing leading '/' from member names
+home/
+home/abernal/
+home/abernal/.bash_profile</code></pre></div>
+
+<h3>Compare file sizes</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# ls -lh /tmp/home.tar*
+-rw-r--r--. 1 root root 40K Mar 24 09:00 /tmp/home.tar
+-rw-r--r--. 1 root root 12K Mar 24 09:00 /tmp/home.tar.bz2
+-rw-r--r--. 1 root root 14K Mar 24 09:00 /tmp/home.tar.gz</code></pre></div>
+
+<p>The uncompressed <code>.tar</code> is 40K. The gzip version is 14K and the bzip2 version is 12K — smaller but takes longer to create.</p>
+
+<h3>List contents without extracting</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -tzvf /tmp/home.tar.gz
+drwxr-xr-x root/root         0 2026-03-24 home/
+drwx------ abernal/abernal   0 2026-03-24 home/abernal/</code></pre></div>
+
+<h3>Extract to a different directory</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# tar -xjvf /tmp/home.tar.bz2 -C /tmp
+home/
+home/abernal/
+home/abernal/.bash_profile
+ 
+[root@rhel ~]# ls /tmp/home/
+abernal</code></pre></div>
+
+<hr>
+
+<h2>Quick Reference — Common tar Commands</h2>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Create gzip archive
+tar -czvf archive.tar.gz /path/to/dir
+ 
+# Create bzip2 archive
+tar -cjvf archive.tar.bz2 /path/to/dir
+ 
+# List contents (gzip)
+tar -tzvf archive.tar.gz
+ 
+# List contents (bzip2)
+tar -tjvf archive.tar.bz2
+ 
+# Extract gzip archive (current dir)
+tar -xzvf archive.tar.gz
+ 
+# Extract bzip2 archive (specific dir)
+tar -xjvf archive.tar.bz2 -C /destination
+ 
+# Extract single file
+tar -xzvf archive.tar.gz path/to/file</code></pre></div>
+
+<hr>
+
+<h2>RHCSA Exam Tips</h2>
+
+<p>> <strong>EXAM TIP:</strong> Archiving and compression are tasks usually done together to produce smaller archive files. You will likely see this on the RHCSA exam.</p>
+
+<p>Key things to remember for the exam:</p>
+
+<ul>
+<li><code>tar -czvf</code> → create + gzip compress</li>
+<li><code>tar -cjvf</code> → create + bzip2 compress</li>
+<li><code>tar -xzvf</code> → extract gzip archive</li>
+<li><code>tar -xjvf</code> → extract bzip2 archive</li>
+<li><code>-C /path</code> → extract to a specific directory</li>
+<li><code>tar</code> strips the leading <code>/</code> by default — use <code>-P</code> to override</li>
+<li>The <code>-r</code> and <code>-u</code> options <strong>do not work</strong> on compressed archives</li>
+</ul>
+
+<hr>
+
+<h2>Summary</h2>
+
+<p>| Tool | Creates | Extracts | Extension |</p>
+<p>|------|---------|----------|-----------|</p>
+<p>| <code>gzip</code> | <code>gzip file</code> | <code>gunzip file.gz</code> | <code>.gz</code> |</p>
+<p>| <code>bzip2</code> | <code>bzip2 file</code> | <code>bunzip2 file.bz2</code> | <code>.bz2</code> |</p>
+<p>| <code>tar</code> (plain) | <code>tar -cvf</code> | <code>tar -xvf</code> | <code>.tar</code> |</p>
+<p>| <code>tar + gzip</code> | <code>tar -czvf</code> | <code>tar -xzvf</code> | <code>.tar.gz</code> |</p>
+<p>| <code>tar + bzip2</code> | <code>tar -cjvf</code> | <code>tar -xjvf</code> | <code>.tar.bz2</code> |</p>
+
+<p>In the next article we will cover the <code>vim</code> editor — the essential text editing tool for every Linux sysadmin.</p>
+
+<hr>
+
+<p>*Questions? Find me on X as @stackdeploy</p>
+  </div>
+
+  <div class="article-footer">
+    <a href="/" class="back-link">← Back to Articles</a>
+    <div class="author-block">Written by <span>Andres Bernal</span> | <span>@abernal093</span></div>
+  </div>
+</article>
+
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+</script>
+</body>
+</html>
