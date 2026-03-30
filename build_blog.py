@@ -348,9 +348,42 @@ def inject_cards(html_content, cards_html):
     return html_content
 
 # ── GENERAR INDEX.HTML ─────────────────────────────────────
-def generate_index_html(articles):
+def generate_index_html(new_articles):
+    # ── Cargar TODOS los articulos ya publicados desde 05_published ──────
+    published_dir = BASE_DIR / "stackdeploy-content" / "05_published"
+    all_articles_map = {}  # slug -> meta dict
+
+    if published_dir.exists():
+        import json as _json
+        for pf in sorted(published_dir.glob("*_meta.json"), reverse=True):
+            try:
+                with open(pf, encoding='utf-8') as jf:
+                    m = _json.load(jf)
+                normalized = {
+                    'titulo':    m.get('title',        m.get('titulo',    '')),
+                    'slug':      m.get('slug',                             ''),
+                    'categoria': m.get('category',     m.get('categoria', '')),
+                    'nivel':     m.get('level',         m.get('nivel',    '')),
+                    'fecha':     m.get('publish_date',  m.get('fecha',    '')),
+                    'excerpt':   m.get('excerpt',                          ''),
+                }
+                if normalized['slug']:
+                    all_articles_map[normalized['slug']] = normalized
+            except Exception:
+                pass
+
+    # ── Agregar / sobreescribir con los articulos del run actual ──────────
+    for a in new_articles:
+        slug = a.get('slug', '')
+        if slug:
+            all_articles_map[slug] = a
+
+    # ── Ordenar por fecha descendente ─────────────────────────────────────
+    all_articles = sorted(all_articles_map.values(),
+                          key=lambda x: x.get('fecha', ''), reverse=True)
+
     cards_html = ''
-    for a in articles:
+    for a in all_articles:
         cards_html += f'''
         <div class="article-card" onclick="window.location='/articles/{a["slug"]}.html'">
           <div class="card-tags">
@@ -365,19 +398,28 @@ def generate_index_html(articles):
           </div>
         </div>'''
 
-    # Read the existing index.html if it exists, otherwise use base template
-    index_path = BASE_DIR / "index.html"
+    # ── Leer el index.html existente en public/ para inyectar ─────────────
+    # CORRECCIÓN: la ruta correcta es OUTPUT_DIR/index.html, no BASE_DIR/index.html
+    index_path = OUTPUT_DIR / "index.html"
+    if not index_path.exists():
+        index_path = BASE_DIR / "index.html"   # fallback por si acaso
+
     if index_path.exists():
         with open(index_path, 'r', encoding='utf-8') as f:
             existing = f.read()
-        # Inject articles into existing blog
         marker_start = '<!-- ARTICLES_START -->'
-        marker_end = '<!-- ARTICLES_END -->'
+        marker_end   = '<!-- ARTICLES_END -->'
         if marker_start in existing and marker_end in existing:
             new_content = re.sub(
                 f'{re.escape(marker_start)}.*?{re.escape(marker_end)}',
-                f'{marker_start}\n{cards_html}\n{marker_end}',
+                f'{marker_start}\n{cards_html}\n    {marker_end}',
                 existing, flags=re.DOTALL
+            )
+            # Actualizar el contador de articulos en el titulo de la seccion
+            new_content = re.sub(
+                r'// \d+ POSTS',
+                f'// {len(all_articles)} POSTS',
+                new_content
             )
             return new_content
 
@@ -521,7 +563,7 @@ def main():
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(index_html)
 
-    print(f"\n  [OK] index.html actualizado con {len(articles)} articulo(s)")
+    print(f"\n  [OK] index.html actualizado")
     print(f"  [OK] Archivos generados en: public/")
 
     # Copiar pages/ a public/ siempre (independiente de articulos nuevos)
