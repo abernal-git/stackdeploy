@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux File Permissions and Searching in RHEL | StackDeploy</title>
+<meta name="description" content="Master Linux file permissions in RHEL. Learn the UGO/RWX model, chmod, chown, umask, special bits (SUID, SGID, Sticky), and the find command with real lab examples. RHCSA prep included.">
+<meta name="keywords" content="linux file permissions rhel, chmod chown rhel, ugo rwx linux, linux find command, umask rhel, suid sgid sticky bit, rhcsa permissions, linux access control">
+<meta name="author" content="Andres Bernal">
+<meta property="og:title" content="Linux File Permissions and Searching in RHEL">
+<meta property="og:description" content="Master Linux file permissions in RHEL. Learn the UGO/RWX model, chmod, chown, umask, special bits (SUID, SGID, Sticky), and the find command with real lab examples. RHCSA prep included.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://stackdeploy.dev/articles/linux-file-permissions-and-searching-in-rhel">
+<link rel="canonical" href="https://stackdeploy.dev/articles/linux-file-permissions-and-searching-in-rhel">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --dark: #111; --card: #141414;
+    --accent: #b0b0b0; --white: #f0f0f0; --gray: #888; --border: #222;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; line-height:1.8; }
+
+  /* NAV */
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+    color:var(--accent); text-decoration:none; }
+  .nav-links { display:flex; gap:8px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; padding:8px 16px; border:1px solid transparent;
+    transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
+  .nav-links a:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ARTICLE */
+  .article-wrapper { max-width:780px; margin:0 auto; padding:100px 40px 80px; }
+
+  .article-meta { margin-bottom:40px; }
+  .meta-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .meta-tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white);
+    background:#2a2a2a; padding:4px 10px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid #3a3a3a; }
+  .meta-tag.accent { background:var(--accent); color:var(--black); border-color:var(--accent); }
+  .article-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,6vw,64px);
+    line-height:1; letter-spacing:1px; color:var(--white); margin-bottom:16px; }
+  .article-excerpt { font-size:16px; color:var(--gray); line-height:1.7;
+    font-weight:300; margin-bottom:24px; border-left:3px solid var(--accent); padding-left:20px; }
+  .article-info { display:flex; gap:24px; font-family:'Space Mono',monospace;
+    font-size:11px; color:#555; flex-wrap:wrap; }
+  .article-info span { color:var(--accent); }
+
+  /* CONTENT */
+  .article-content { border-top:1px solid var(--border); padding-top:48px; }
+  .article-content h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; margin:48px 0 16px; color:var(--accent); }
+  .article-content h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; margin:40px 0 16px;
+    color:var(--white); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .article-content h3 { font-family:'Bebas Neue',sans-serif; font-size:24px; margin:32px 0 12px; color:var(--accent); }
+  .article-content h4 { font-size:16px; font-weight:600; margin:24px 0 8px; color:var(--white); }
+  .article-content p { font-size:15px; color:#ccc; margin-bottom:20px; line-height:1.8; }
+  .article-content ul { margin:16px 0 24px 0; padding-left:0; list-style:none; }
+  .article-content li { font-size:15px; color:#ccc; padding:6px 0 6px 20px;
+    border-left:2px solid var(--border); margin-bottom:4px; position:relative; }
+  .article-content li::before { content:'→'; position:absolute; left:-20px; color:var(--accent); }
+  .article-content hr { border:none; border-top:1px solid var(--border); margin:40px 0; }
+  .article-content strong { color:var(--white); font-weight:600; }
+  .article-content em { color:var(--accent); font-style:italic; }
+  .article-content a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(176,176,176,0.3); }
+  .article-content a:hover { border-bottom-color:var(--accent); }
+  .article-content code { font-family:'Space Mono',monospace; font-size:12px;
+    background:#1a1a1a; color:var(--accent); padding:2px 6px; border:1px solid var(--border); }
+
+  /* CODE BLOCKS */
+  .code-block { background:#0d0d0d; border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+  .code-header { display:flex; align-items:center; justify-content:space-between;
+    padding:8px 16px; background:#111; border-bottom:1px solid var(--border); }
+  .code-lang { font-family:'Space Mono',monospace; font-size:10px; color:var(--accent);
+    letter-spacing:2px; text-transform:uppercase; }
+  .copy-btn { font-family:'Space Mono',monospace; font-size:9px; color:var(--gray);
+    background:transparent; border:1px solid var(--border); padding:4px 10px;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .code-block pre { padding:20px; overflow-x:auto; }
+  .code-block code { background:transparent; border:none; padding:0;
+    font-size:13px; color:#e0e0e0; line-height:1.6; }
+
+  /* FOOTER */
+  .article-footer { margin-top:80px; padding-top:40px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .back-link { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border); padding:10px 20px; transition:all 0.2s; }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); }
+  .author-block { font-family:'Space Mono',monospace; font-size:11px; color:#555; }
+  .author-block span { color:var(--accent); }
+
+  /* PAGE FOOTER */
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+
+  @media(max-width:768px) {
+    nav { padding:0 20px; } .nav-links { display:none; }
+    .article-wrapper { padding:90px 20px 60px; }
+    footer { padding:24px 20px; flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/articles">Articles</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrapper">
+  <div class="article-meta">
+    <div class="meta-tags">
+      <span class="meta-tag accent"></span>
+      <span class="meta-tag">Beginner</span>
+      <span class="meta-tag">15 MIN READ</span>
+    </div>
+    <h1 class="article-title">Linux File Permissions and Searching in RHEL</h1>
+    <p class="article-excerpt">Master Linux file permissions in RHEL. Learn the UGO/RWX model, chmod, chown, umask, special bits (SUID, SGID, Sticky), and the find command with real lab examples. RHCSA prep included.</p>
+    <div class="article-info">
+      <span>BY <span>Andres Bernal (@abernal093)</span></span>
+      <span>PUBLISHED <span>2026-04-22</span></span>
+      <span>STACKDEPLOY.DEV</span>
+    </div>
+  </div>
+
+  <div class="article-content">
+    <h1>Linux File Permissions and Searching in RHEL</h1>
+
+<p>In Linux, regulating file and directory access is a fundamental administrative task. Proper permissions prevent unauthorized users from viewing or modifying sensitive data. This chapter explores the standard UGO/RWX permission model. You will learn to assign permissions to three distinct user categories using two different methods, and calculate and apply consistent permissions on new files and directories. Finally, you will learn to locate files using a wide array of criteria — name, size, time, and permissions — and how to execute actions on the results as they are found.</p>
+
+<hr>
+
+<h2>File and Directory Access Permissions</h2>
+
+<p>Linux is a multi-user operating system capable of supporting hundreds of users working concurrently. The OS has hundreds of thousands of files and directories that it must maintain securely to warrant successful system and application operation from both security and reliability standpoints.</p>
+
+<p>It is imperative that you regulate file and directory access by granting users only the permissions they need to carry out their tasks — a principle known as <strong>least privilege</strong>. This control of permissions on files and directories is commonly referred to as <strong>user access rights</strong>.</p>
+
+<hr>
+
+<h2>Determining Access Permissions</h2>
+
+<p>Access permissions on files and directories allow administrative control over which users can access them and to what level. The permissions discussed in this section are referred to as <strong>standard UGO/RWX permissions</strong>.</p>
+
+<h3>Permission Classes</h3>
+
+<p>Users are categorized into three unique classes for maintaining file security through access rights:</p>
+
+<ul>
+<li><strong>User (u)</strong> — the owner of the file or directory</li>
+<li><strong>Group (g)</strong> — the group assigned to the file or directory</li>
+<li><strong>Other (o)</strong> — also called public; all other users on the system who are neither the owner nor in the assigned group</li>
+<li><strong>All (a)</strong> — a special class that represents all three combined: user, group, and other</li>
+</ul>
+
+<p>To view the permission classes on a file, use <code>ls -l</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# ls -l /etc/hosts
+-rw-r--r--. 1 root root 158 Mar 10 10:00 /etc/hosts</code></pre></div>
+
+<p>Breaking down column 1:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">- rw- r-- r--
+│  │   │   │
+│  │   │   └── Other: read only
+│  │   └────── Group: read only
+│  └────────── User (owner): read + write
+└───────────── File type: - = regular file</code></pre></div>
+
+<h3>Permission Types</h3>
+
+<p>Each permission class can have three types of permissions:</p>
+
+<p>| Symbol | Name | On Files | On Directories |</p>
+<p>|--------|------|----------|----------------|</p>
+<p>| <code>r</code> | Read | View file contents | List directory contents with <code>ls</code> |</p>
+<p>| <code>w</code> | Write | Modify or delete file | Create, delete, or rename files inside |</p>
+<p>| <code>x</code> | Execute | Run as a program or script | Enter directory with <code>cd</code> |</p>
+<p>| <code>-</code> | No permission | Denied | Denied |</p>
+
+<p>> <strong>Senior Engineer Note:</strong> For directories, the execute bit is often misunderstood. Without <code>x</code> on a directory, you cannot <code>cd</code> into it even if you have <code>r</code>. Think of <code>x</code> as the "enter" permission and <code>r</code> as the "list" permission — you need both for full directory access.</p>
+
+<h3>Permission Modes</h3>
+
+<p>Permissions are expressed in two formats:</p>
+
+<p><strong>Symbolic mode</strong> — uses letters (r, w, x) with operators (+, -, =):</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Add execute for owner
+chmod u+x script.sh
+ 
+# Remove write from group and other
+chmod go-w file.txt
+ 
+# Set exact permissions: owner=rwx, group=r-x, other=r--
+chmod u=rwx,g=rx,o=r file.txt</code></pre></div>
+
+<p><strong>Octal (numeric) mode</strong> — uses numbers 0-7 where each digit represents a permission class:</p>
+
+<p>| Octal | Binary | Permissions |</p>
+<p>|-------|--------|-------------|</p>
+<p>| 7 | 111 | rwx |</p>
+<p>| 6 | 110 | rw- |</p>
+<p>| 5 | 101 | r-x |</p>
+<p>| 4 | 100 | r-- |</p>
+<p>| 3 | 011 | -wx |</p>
+<p>| 2 | 010 | -w- |</p>
+<p>| 1 | 001 | --x |</p>
+<p>| 0 | 000 | --- |</p>
+
+<p>Real lab example:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# chmod 754 deploy.sh
+[root@rhel ~]# ls -l deploy.sh
+-rwxr-xr-- 1 root root 1024 Apr 13 10:00 deploy.sh
+# Owner: rwx (7), Group: r-x (5), Other: r-- (4)</code></pre></div>
+
+<hr>
+
+<h2>Modifying Access Permission Bits</h2>
+
+<h3>chmod — Changing Permissions</h3>
+
+<p>The <code>chmod</code> (change mode) command modifies file and directory permissions. Only the file owner or root can change permissions.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Symbolic examples
+[root@rhel ~]# chmod u+x script.sh          # Add execute for owner
+[root@rhel ~]# chmod g-w config.conf        # Remove write from group
+[root@rhel ~]# chmod o= private.key         # Remove all permissions from other
+[root@rhel ~]# chmod a+r public.html        # Add read for everyone
+ 
+# Octal examples
+[root@rhel ~]# chmod 600 id_rsa             # Owner rw only (SSH key)
+[root@rhel ~]# chmod 755 /usr/local/bin/app # Standard executable
+[root@rhel ~]# chmod 644 /etc/myapp.conf    # Config file: owner rw, rest r
+[root@rhel ~]# chmod 700 /root/scripts/     # Private directory
+ 
+# Recursive - apply to directory and all contents
+[root@rhel ~]# chmod -R 750 /opt/myapp/</code></pre></div>
+
+<h3>chown — Changing Ownership</h3>
+
+<p>The <code>chown</code> (change owner) command changes the user and/or group ownership of a file or directory. Only root can change the owner.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Change owner only
+[root@rhel ~]# chown andres file.txt
+ 
+# Change owner and group
+[root@rhel ~]# chown andres:developers file.txt
+ 
+# Change group only (colon without user)
+[root@rhel ~]# chown :developers file.txt
+ 
+# Recursive
+[root@rhel ~]# chown -R andres:developers /opt/project/
+ 
+# Verify
+[root@rhel ~]# ls -l file.txt
+-rw-r--r--. 1 andres developers 1024 Apr 13 10:00 file.txt</code></pre></div>
+
+<h3>chgrp — Changing Group Ownership</h3>
+
+<p><code>chgrp</code> changes only the group ownership — useful when you don't want to touch the owner:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# chgrp developers /opt/project/
+[root@rhel ~]# chgrp -R webadmin /var/www/html/</code></pre></div>
+
+<hr>
+
+<h2>Special Permission Bits</h2>
+
+<p>Beyond the standard UGO/RWX model, Linux supports three special permission bits that modify how files and directories behave.</p>
+
+<h3>SUID (Set User ID) — Octal 4</h3>
+
+<p>When SUID is set on an executable, it runs with the permissions of the <strong>file owner</strong> instead of the user executing it. This is how <code>passwd</code> allows regular users to change their own password (which requires writing to <code>/etc/shadow</code>, owned by root).</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# ls -l /usr/bin/passwd
+-rwsr-xr-x. 1 root root 32648 /usr/bin/passwd
+#   ^
+#   's' in owner execute position = SUID is set</code></pre></div>
+
+<p>Setting SUID:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# chmod u+s /usr/local/bin/myapp
+# or
+[root@rhel ~]# chmod 4755 /usr/local/bin/myapp</code></pre></div>
+
+<p>> <strong>Senior Engineer Warning:</strong> SUID on executables is a significant security risk. Audit all SUID files regularly:</p>
+<p>> <code>`</code>bash</p>
+<p>> find / -perm -4000 -type f 2>/dev/null</p>
+<p>> <code>`</code></p>
+
+<h3>SGID (Set Group ID) — Octal 2</h3>
+
+<p>On executables, SGID runs the file with the <strong>group</strong> of the file owner. On <strong>directories</strong>, SGID forces all new files created inside to inherit the directory's group — extremely useful for shared project directories.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# ls -l /usr/bin/write
+-rwxr-sr-x. 1 root tty 19536 /usr/bin/write
+#        ^
+#        's' in group execute position = SGID is set
+ 
+# Set SGID on a shared directory
+[root@rhel ~]# chmod g+s /opt/shared/
+[root@rhel ~]# chmod 2775 /opt/shared/
+[root@rhel ~]# ls -ld /opt/shared/
+drwxrwsr-x. 2 root developers 40 Apr 13 10:00 /opt/shared/</code></pre></div>
+
+<h3>Sticky Bit — Octal 1</h3>
+
+<p>On directories with the sticky bit set, only the <strong>file owner</strong>, the <strong>directory owner</strong>, or <strong>root</strong> can delete or rename files inside — even if others have write permission. This is the default behavior on <code>/tmp</code>.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# ls -ld /tmp
+drwxrwxrwt. 12 root root 4096 Apr 13 10:00 /tmp
+#         ^
+#         't' in other execute position = sticky bit is set
+ 
+# Set sticky bit
+[root@rhel ~]# chmod o+t /opt/shared/
+# or
+[root@rhel ~]# chmod 1777 /opt/shared/</code></pre></div>
+
+<hr>
+
+<h2>Default Permissions</h2>
+
+<h3>umask — The Default Permission Mask</h3>
+
+<p>When a new file or directory is created, its default permissions are determined by the <strong>umask</strong> (user file creation mask). The umask specifies which permissions to <strong>remove</strong> from the system defaults.</p>
+
+<p>System defaults before umask:</p>
+<ul>
+<li>Files: <code>666</code> (rw-rw-rw-)</li>
+<li>Directories: <code>777</code> (rwxrwxrwx)</li>
+</ul>
+
+<p>The umask value is <strong>subtracted</strong> from these defaults:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# umask
+0022</code></pre></div>
+
+<h3>Calculating Default Permissions</h3>
+
+<p>With <code>umask 0022</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">Files:       666 - 022 = 644  → rw-r--r--
+Directories: 777 - 022 = 755  → rwxr-xr--</code></pre></div>
+
+<p>Lab verification:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">[root@rhel ~]# umask
+0022
+ 
+[root@rhel ~]# touch newfile.txt
+[root@rhel ~]# mkdir newdir
+[root@rhel ~]# ls -ld newfile.txt newdir
+-rw-r--r--. 1 root root    0 Apr 13 10:00 newfile.txt
+drwxr-xr-x. 2 root root 4096 Apr 13 10:00 newdir</code></pre></div>
+
+<h3>Changing the umask</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Temporary (current session only)
+[root@rhel ~]# umask 027
+ 
+# Verify new behavior
+[root@rhel ~]# touch securefile.txt
+[root@rhel ~]# ls -l securefile.txt
+-rw-r-----. 1 root root 0 Apr 13 10:00 securefile.txt
+# 666 - 027 = 640 → rw-r-----</code></pre></div>
+
+<p>To make it permanent, add to <code>~/.bashrc</code> or <code>/etc/profile</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">echo "umask 027" &gt;&gt; /etc/profile</code></pre></div>
+
+<p>> <strong>Senior Engineer Note:</strong> A <code>umask 027</code> is a good security baseline for most RHEL servers. It ensures no world-readable files by default, while still allowing group read access.</p>
+
+<hr>
+
+<h2>File Searching</h2>
+
+<p>Finding files efficiently is one of the most critical skills for a Linux sysadmin. RHEL provides the <code>find</code> command — one of the most powerful and flexible tools in the Linux arsenal.</p>
+
+<hr>
+
+<h2>Using the find Command</h2>
+
+<p>The basic syntax is:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">find [path] [criteria] [action]</code></pre></div>
+
+<h3>Search by Name</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Find by exact name
+[root@rhel ~]# find / -name "sshd_config"
+/etc/ssh/sshd_config
+ 
+# Case-insensitive search
+[root@rhel ~]# find /etc -iname "*.conf"
+ 
+# Find by name pattern
+[root@rhel ~]# find /var/log -name "*.log"
+/var/log/messages
+/var/log/secure
+/var/log/audit/audit.log</code></pre></div>
+
+<h3>Search by Type</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Files only
+[root@rhel ~]# find /etc -type f -name "*.conf"
+ 
+# Directories only
+[root@rhel ~]# find /opt -type d
+ 
+# Symbolic links only
+[root@rhel ~]# find /usr/bin -type l
+ 
+# Block devices
+[root@rhel ~]# find /dev -type b</code></pre></div>
+
+<h3>Search by Size</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Files larger than 100MB
+[root@rhel ~]# find / -size +100M -type f 2&gt;/dev/null
+ 
+# Files smaller than 10KB
+[root@rhel ~]# find /etc -size -10k -type f
+ 
+# Files exactly 512 bytes
+[root@rhel ~]# find /tmp -size 512c
+ 
+# Size suffixes: c=bytes, k=kilobytes, M=megabytes, G=gigabytes</code></pre></div>
+
+<h3>Search by Time</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Modified in the last 24 hours
+[root@rhel ~]# find /etc -mtime -1
+ 
+# Modified more than 30 days ago
+[root@rhel ~]# find /var/log -mtime +30
+ 
+# Accessed in the last 7 days
+[root@rhel ~]# find /home -atime -7
+ 
+# Changed (metadata) in last 2 days
+[root@rhel ~]# find /etc -ctime -2
+ 
+# Modified in the last 60 minutes
+[root@rhel ~]# find /tmp -mmin -60</code></pre></div>
+
+<h3>Search by Permissions</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Files with exact permissions 777
+[root@rhel ~]# find / -perm 777 -type f 2&gt;/dev/null
+ 
+# Files with at least these permissions (any bit matches)
+[root@rhel ~]# find / -perm -644 -type f 2&gt;/dev/null
+ 
+# Find all SUID files (security audit)
+[root@rhel ~]# find / -perm -4000 -type f 2&gt;/dev/null
+/usr/bin/passwd
+/usr/bin/sudo
+/usr/bin/su
+ 
+# Find all SGID files
+[root@rhel ~]# find / -perm -2000 -type f 2&gt;/dev/null
+ 
+# Find world-writable files (security risk)
+[root@rhel ~]# find / -perm -o+w -type f 2&gt;/dev/null</code></pre></div>
+
+<h3>Search by Ownership</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Files owned by specific user
+[root@rhel ~]# find /home -user andres
+ 
+# Files owned by specific group
+[root@rhel ~]# find /opt -group developers
+ 
+# Files with no valid owner (orphaned files - security concern)
+[root@rhel ~]# find / -nouser 2&gt;/dev/null
+ 
+# Files with no valid group
+[root@rhel ~]# find / -nogroup 2&gt;/dev/null</code></pre></div>
+
+<h3>Combining Multiple Criteria</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Files owned by root AND with SUID set
+[root@rhel ~]# find / -user root -perm -4000 -type f 2&gt;/dev/null
+ 
+# Large log files modified more than 7 days ago
+[root@rhel ~]# find /var/log -name "*.log" -size +50M -mtime +7
+ 
+# Config files modified in last 24 hours (useful after changes)
+[root@rhel ~]# find /etc -type f -name "*.conf" -mtime -1
+ 
+# OR operator: find files owned by root OR group root
+[root@rhel ~]# find /etc \( -user root -o -group root \) -type f</code></pre></div>
+
+<hr>
+
+<h2>Using find with -exec and -ok Flags</h2>
+
+<p>The real power of <code>find</code> comes from combining it with actions. The <code>-exec</code> and <code>-ok</code> flags let you run a command on each result found.</p>
+
+<h3>-exec Flag</h3>
+
+<p>Executes a command on each found file automatically without prompting:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Syntax
+find [path] [criteria] -exec command {} \;
+# {} = placeholder for the found file
+# \; = end of the command</code></pre></div>
+
+<p>Real examples:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Change permissions on all .conf files in /etc
+[root@rhel ~]# find /etc -name "*.conf" -exec chmod 644 {} \;
+ 
+# Change ownership of all files in /opt/project
+[root@rhel ~]# find /opt/project -type f -exec chown andres:developers {} \;
+ 
+# Delete all .tmp files older than 7 days in /tmp
+[root@rhel ~]# find /tmp -name "*.tmp" -mtime +7 -exec rm {} \;
+ 
+# Display detailed info on all SUID files
+[root@rhel ~]# find / -perm -4000 -type f -exec ls -lh {} \; 2&gt;/dev/null
+ 
+# Compress all log files larger than 100MB
+[root@rhel ~]# find /var/log -name "*.log" -size +100M -exec gzip {} \;
+ 
+# Using + instead of \; for efficiency (runs one command with multiple args)
+[root@rhel ~]# find /etc -name "*.conf" -exec chmod 644 {} +</code></pre></div>
+
+<h3>-ok Flag</h3>
+
+<p>Works exactly like <code>-exec</code> but <strong>prompts for confirmation before each action</strong> — safer for destructive operations:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Syntax
+find [path] [criteria] -ok command {} \;</code></pre></div>
+
+<p>Real examples:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># Prompt before removing each core dump file
+[root@rhel ~]# find / -name core -ok rm {} \;
+&lt; rm ... /var/crash/core &gt; ? y
+&lt; rm ... /tmp/core &gt; ? n
+ 
+# Prompt before changing permissions
+[root@rhel ~]# find /home -name "*.sh" -ok chmod 750 {} \;
+&lt; chmod ... /home/andres/deploy.sh &gt; ? y
+&lt; chmod ... /home/andres/backup.sh &gt; ? y</code></pre></div>
+
+<p>> <strong>Senior Engineer Tip:</strong> Always test with <code>-print</code> before using <code>-exec</code> with destructive commands:</p>
+<p>> <code>`</code>bash</p>
+<p>> # First: see what would be affected</p>
+<p>> find /tmp -name "*.tmp" -mtime +7 -print</p>
+<p>></p>
+<p>> # Then: execute when confirmed</p>
+<p>> find /tmp -name "*.tmp" -mtime +7 -exec rm {} \;</p>
+<p>> <code>`</code></p>
+
+<h3>Practical Security Audit with find</h3>
+
+<p>As a Senior Red Hat Engineer, here is a complete security audit script using find:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">#!/bin/bash
+echo "=== SECURITY AUDIT: $(date) ==="
+ 
+echo -e "\n[1] SUID Files:"
+find / -perm -4000 -type f 2&gt;/dev/null
+ 
+echo -e "\n[2] SGID Files:"
+find / -perm -2000 -type f 2&gt;/dev/null
+ 
+echo -e "\n[3] World-Writable Files:"
+find / -perm -o+w -type f -not -path "/proc/*" 2&gt;/dev/null
+ 
+echo -e "\n[4] Orphaned Files (no owner):"
+find / -nouser -o -nogroup 2&gt;/dev/null
+ 
+echo -e "\n[5] Files Modified in Last 24h in /etc:"
+find /etc -mtime -1 -type f 2&gt;/dev/null
+ 
+echo "=== END AUDIT ==="</code></pre></div>
+
+<hr>
+
+<h2>Chapter Summary</h2>
+
+<p>Understanding file permissions is one of the most critical skills for any RHEL administrator. In this chapter we covered the complete permission model:</p>
+
+<p>The <strong>UGO/RWX model</strong> categorizes users into three classes — user (owner), group, and other — and assigns three permission types — read, write, and execute — to each class. Permissions are displayed with <code>ls -l</code> and modified with <code>chmod</code> using either symbolic or octal notation. Ownership is managed with <code>chown</code> and <code>chgrp</code>.</p>
+
+<p>The <strong>special permission bits</strong> — SUID, SGID, and Sticky — extend the standard model. SUID runs executables as the file owner, SGID on directories forces group inheritance, and the Sticky bit protects files in shared directories from deletion by non-owners.</p>
+
+<p>The <strong>umask</strong> controls default permissions for newly created files and directories by subtracting from the system defaults (666 for files, 777 for directories). A umask of 022 produces 644 for files and 755 for directories.</p>
+
+<p>The <strong>find command</strong> is the most powerful file search tool in Linux. It supports searching by name, type, size, time, permissions, and ownership. Combined with <code>-exec</code> and <code>-ok</code>, it can perform bulk operations on search results — from changing permissions to removing outdated files.</p>
+
+<hr>
+
+<h2>Review Questions — RHCSA Style</h2>
+
+<p><strong>1.</strong> What would the command <code>find / -name core -ok rm {} \;</code> do?</p>
+
+<p><strong>2.</strong> A file has permissions <code>rwxr-x---</code>. What is the octal representation?</p>
+
+<p><strong>3.</strong> What umask value would result in permissions of <code>640</code> for newly created files?</p>
+
+<p><strong>4.</strong> Which special permission bit on a directory ensures that new files inherit the directory's group ownership?</p>
+
+<p><strong>5.</strong> A regular user needs to execute a script that modifies <code>/etc/passwd</code>. Which special permission bit on the script would allow this?</p>
+
+<p><strong>6.</strong> What does the <code>-mtime -7</code> option in the <code>find</code> command mean?</p>
+
+<p><strong>7.</strong> What is the difference between <code>chmod 755</code> and <code>chmod u=rwx,g=rx,o=rx</code>?</p>
+
+<p><strong>8.</strong> Which command would you use to find all world-writable files on the system?</p>
+
+<p><strong>9.</strong> The sticky bit is set on a directory <code>/data/shared</code> with permissions <code>rwxrwxrwt</code>. User <code>alice</code> created a file in this directory. Can user <code>bob</code> delete it?</p>
+
+<p><strong>10.</strong> What is the default umask for the root user on a RHEL system, and what permissions will a newly created file have?</p>
+
+<hr>
+
+<h2>Answers to Review Questions</h2>
+
+<p><strong>1.</strong> The command <code>find / -name core -ok rm {} \;</code> searches the entire filesystem for files named <code>core</code> and prompts the administrator for confirmation (<code>-ok</code>) before removing each one with <code>rm</code>. The <code>{}</code> is replaced by the found filename, and <code>\;</code> terminates the command.</p>
+
+<p><strong>2.</strong> <code>rwxr-x---</code> in octal is <code>750</code>. Owner: rwx=7, Group: r-x=5, Other: ---=0.</p>
+
+<p><strong>3.</strong> A umask of <code>026</code> would produce <code>640</code> for files. Calculation: 666 - 026 = 640.</p>
+
+<p><strong>4.</strong> The <strong>SGID (Set Group ID)</strong> bit on a directory ensures all new files and subdirectories created inside inherit the directory's group ownership.</p>
+
+<p><strong>5.</strong> <strong>SUID (Set User ID)</strong> on the script would allow it to run with the permissions of the script's owner. If the owner is root, the script would execute with root privileges regardless of who runs it.</p>
+
+<p><strong>6.</strong> <code>-mtime -7</code> means files that were <strong>modified less than 7 days ago</strong>. The minus sign means "less than." A plus sign (<code>+7</code>) would mean more than 7 days ago.</p>
+
+<p><strong>7.</strong> They produce identical results. <code>chmod 755</code> uses octal notation while <code>chmod u=rwx,g=rx,o=rx</code> uses symbolic notation. Both set owner to rwx, group to r-x, and other to r-x.</p>
+
+<p><strong>8.</strong> <code>find / -perm -o+w -type f 2>/dev/null</code> — the <code>-perm -o+w</code> flag matches any file where the other (world) write bit is set.</p>
+
+<p><strong>9.</strong> <strong>No.</strong> The sticky bit (<code>t</code>) on the directory means only the file owner (alice), the directory owner, or root can delete or rename files. Bob cannot delete alice's file even though he has write permission on the directory.</p>
+
+<p><strong>10.</strong> The default umask for root is <code>0022</code>. A newly created file will have permissions <code>644</code> (rw-r--r--). Calculation: 666 - 022 = 644.</p>
+
+<hr>
+
+<p>Questions ? Find me on X as Stackdeploy or visit stackdeploy.dev</p>
+  </div>
+
+  <div class="article-footer">
+    <a href="/" class="back-link">← Back to Articles</a>
+    <div class="author-block">Written by <span>Andres Bernal</span> | <span>@abernal093</span></div>
+  </div>
+</article>
+
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+</script>
+</body>
+</html>

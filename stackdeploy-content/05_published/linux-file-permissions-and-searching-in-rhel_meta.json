@@ -1,0 +1,11 @@
+{
+  "title": "Linux File Permissions and Searching in RHEL",
+  "slug": "linux-file-permissions-and-searching-in-rhel",
+  "category": "RHEL / Linux",
+  "publish_date": "2026-04-23",
+  "excerpt": "Master Linux file permissions in RHEL. Learn the UGO/RWX model, chmod, chown, umask, special bits (SUID, SGID, Sticky), and the find command with real lab examples. RHCSA prep included.",
+  "social_text": "",
+  "approved_by": "Andres Bernal",
+  "approved_at": "2026-04-23 00:02:25",
+  "status": "ready"
+}
