@@ -1,0 +1,424 @@
+========================================================
+  STACKDEPLOY — ARTÍCULO EN BORRADOR
+========================================================
+TÍTULO:       Mastering the Bash Shell in RHEL
+SLUG:         mastering-the-bash-shell-in-rhel
+FECHA:        2026-07-15
+CATEGORÍA:    RHEL / Linux
+NIVEL:        Intermediate
+ESTADO:       LISTO PARA PUBLICAR
+AUTOR:        Andres Bernal (@abernal093)
+CREADO:       20260715_000000
+--------------------------------------------------------
+DESCRIPCIÓN SEO:
+Master the Bash shell in RHEL. Learn shell and environment variables, command and variable substitution, tab completion, history, redirection, pipes, filename globbing, regular expressions, and how to configure system-wide and per-user shell environments. RHCSA prep included.
+
+KEYWORDS:
+bash shell rhel, shell environment variables, command substitution bash, bash redirection piping, filename globbing linux, regular expressions grep, bashrc bash_profile, rhcsa bash shell, tab completion command history
+========================================================
+
+CUERPO DEL ARTÍCULO:
+──────────────────────────────────────────────────────
+
+# Mastering the Bash Shell in RHEL
+
+The shell is the primary interface between a system administrator and the operating system. On Red Hat Enterprise Linux, the default shell is **Bash** (the Bourne-Again Shell), and knowing it well is the difference between fighting the command line and flowing through it. This chapter walks through everything you need to navigate and interact with the system efficiently: managing shell and environment variables, using command and variable substitution, leveraging productivity features like tab completion and command history, wielding metacharacters for redirection and piping, matching filenames with globbing, matching text with regular expressions, and finally configuring the shell environment both system-wide and per user.
+
+Every command below runs on a standard RHEL 9/10 installation. Try them in a lab, not in production.
+
+---
+
+## What Is the Shell?
+
+A shell is a command interpreter. It reads the lines you type, expands and interprets them, launches the corresponding programs, and returns their output. Bash is one of several shells available on Linux, but it is the default login shell for most RHEL users.
+
+You can confirm which shell you are running and where it lives:
+
+```bash
+echo $SHELL
+# /bin/bash
+
+which bash
+# /usr/bin/bash
+
+cat /etc/shells
+# lists all valid login shells on the system
+```
+
+The `$SHELL` variable holds the path to your **login** shell, defined in `/etc/passwd`. To see the process actually interpreting your current session, inspect the parent process instead:
+
+```bash
+ps -p $$ -o comm=
+# bash
+```
+
+Here `$$` is a special variable that expands to the PID of the current shell.
+
+---
+
+## Navigating and Interacting With the System Efficiently
+
+Before diving into advanced features, a quick reminder of the movement primitives. The shell always has a **present working directory**, and most navigation revolves around it.
+
+```bash
+pwd                 # print working directory
+cd /etc             # change to an absolute path
+cd ..               # move up one level
+cd -                # jump back to the previous directory
+cd                  # with no argument, return to your home directory
+cd ~user            # go to another user's home (if permitted)
+```
+
+The tilde `~` is shorthand for your home directory, and `~-` expands to the previous directory (the same target as `cd -`). Chaining these with the productivity features below is what makes an administrator fast.
+
+---
+
+## Shell and Environment Variables
+
+A **variable** is a named piece of memory that stores a value. Bash distinguishes between two scopes:
+
+- **Shell (local) variables** exist only in the current shell. Child processes do not inherit them.
+- **Environment variables** are exported, so they are passed down to any process the shell launches.
+
+Create and read a shell variable:
+
+```bash
+GREETING="hello stackdeploy"
+echo $GREETING
+# hello stackdeploy
+```
+
+There must be **no spaces** around the `=` sign. `NAME = value` is interpreted as a command named `NAME`, not an assignment.
+
+Promote a shell variable to an environment variable with `export`:
+
+```bash
+export GREETING
+# or define and export in one line:
+export PROJECT="stackdeploy"
+```
+
+To prove the difference, define a local variable and a child process will not see it:
+
+```bash
+LOCALVAR="only here"
+bash -c 'echo "child sees: $LOCALVAR"'
+# child sees:
+
+export EXPORTED="now visible"
+bash -c 'echo "child sees: $EXPORTED"'
+# child sees: now visible
+```
+
+Inspect the environment with `env` or `printenv`, and list all shell variables with `set`:
+
+```bash
+printenv                # all environment variables
+printenv HOME           # a single variable
+env | grep -i path      # filter the environment
+set | head              # every shell variable and function
+```
+
+Remove a variable with `unset`:
+
+```bash
+unset GREETING
+```
+
+Some environment variables you will use constantly:
+
+- `PATH` — the colon-separated list of directories searched for commands.
+- `HOME` — your home directory.
+- `USER` and `LOGNAME` — your username.
+- `PWD` and `OLDPWD` — current and previous working directories.
+- `PS1` — the format string for your primary prompt.
+
+Extend your `PATH` without clobbering it by referencing the old value:
+
+```bash
+export PATH="$PATH:$HOME/bin"
+echo $PATH
+```
+
+---
+
+## Command and Variable Substitution
+
+**Variable substitution** replaces `$VAR` (or the safer `${VAR}`) with its value. Braces are essential when the variable name touches other characters:
+
+```bash
+FILE="report"
+echo "$FILE_2026"     # looks for a variable named FILE_2026 -> empty
+echo "${FILE}_2026"   # report_2026
+```
+
+**Command substitution** runs a command and replaces the expression with its output. The modern `$(...)` syntax is preferred over legacy backticks because it nests cleanly:
+
+```bash
+echo "Today is $(date +%F)"
+# Today is 2026-07-15
+
+KERNEL=$(uname -r)
+echo "Running kernel: $KERNEL"
+
+# Nesting is easy with $(...)
+echo "Files here: $(ls $(pwd) | wc -l)"
+```
+
+A related expansion is **arithmetic substitution** with `$((...))`:
+
+```bash
+echo $(( 4 * 1024 ))
+# 4096
+
+COUNT=5
+echo $(( COUNT + 1 ))
+# 6
+```
+
+Understanding quoting is critical here. Double quotes allow substitution; single quotes suppress it entirely:
+
+```bash
+echo "Home is $HOME"     # Home is /root
+echo 'Home is $HOME'     # Home is $HOME
+```
+
+---
+
+## Shell Productivity Features
+
+Bash ships with features that dramatically reduce keystrokes and errors.
+
+### Tab Completion
+
+Press **Tab** to complete commands, file names, paths, and — on RHEL, thanks to the `bash-completion` package — even subcommands and options. Press Tab twice to list all matching candidates when the completion is ambiguous.
+
+```bash
+sudo dnf install bash-completion   # if not already present
+# type: systemctl re<Tab><Tab>
+# restart  reload  reload-or-restart  reset-failed ...
+```
+
+### Command History
+
+Every command you run is stored in memory and written to `~/.bash_history` on logout. Recall and search it:
+
+```bash
+history            # numbered list of past commands
+history 10         # last 10 commands
+!!                 # repeat the previous command
+!123               # run command number 123 from history
+!ssh               # run the most recent command starting with "ssh"
+!$                 # the last argument of the previous command
+```
+
+Press **Ctrl+r** to start a reverse incremental search — begin typing and Bash finds the most recent matching command. Useful history-related variables include `HISTSIZE` (commands kept in memory) and `HISTFILESIZE` (commands kept on disk).
+
+### Editing the Command Line and Quick Navigation
+
+Bash uses Emacs-style key bindings by default. The essential ones:
+
+- **Ctrl+a** / **Ctrl+e** — jump to the beginning / end of the line.
+- **Ctrl+u** / **Ctrl+k** — delete from the cursor to the beginning / end of the line.
+- **Ctrl+w** — delete the word before the cursor.
+- **Alt+b** / **Alt+f** — move backward / forward one word.
+- **Ctrl+l** — clear the screen (same as `clear`).
+
+Combined with tab completion and `Ctrl+r`, these turn the command line into a fast editing surface rather than a place where you retype long paths.
+
+---
+
+## Metacharacters, Redirection, and Piping
+
+The shell reserves certain characters — `> < | & ; * ? [ ] ( ) { } $ \ " '` — as **metacharacters** with special meaning. Two of the most powerful groups control where a program's input and output go.
+
+Every process has three default channels: **stdin** (0), **stdout** (1), and **stderr** (2).
+
+### Redirection
+
+```bash
+command > file       # redirect stdout, overwriting the file
+command >> file      # redirect stdout, appending
+command 2> file      # redirect stderr only
+command > out 2> err # stdout and stderr to separate files
+command &> file      # both stdout and stderr to one file
+command < file       # feed a file to stdin
+command 2>&1         # send stderr to wherever stdout is going
+```
+
+A classic pattern discards noise by sending it to the "black hole" device:
+
+```bash
+find / -name "*.conf" 2> /dev/null
+# suppress "Permission denied" errors, keep real results
+```
+
+### Piping
+
+A **pipe** (`|`) connects the stdout of one command to the stdin of the next, letting you build processing chains:
+
+```bash
+ps aux | grep sshd | grep -v grep
+dnf list installed | wc -l
+cat /etc/passwd | cut -d: -f1 | sort | head
+```
+
+The `tee` command splits a stream, writing to a file **and** passing it along:
+
+```bash
+dnf list installed | tee packages.txt | wc -l
+```
+
+---
+
+## Pattern Matching With Filename Globbing
+
+**Globbing** (also called filename expansion or wildcards) is how the shell matches file names *before* a command runs. The shell expands the pattern into a list of matching files and hands that list to the command.
+
+- `*` — matches any number of characters (including none).
+- `?` — matches exactly one character.
+- `[abc]` — matches any single character in the set.
+- `[!abc]` or `[^abc]` — matches any single character not in the set.
+- `[a-z]` — matches any character in the range.
+- `{one,two,three}` — brace expansion generates each listed string.
+
+```bash
+ls *.conf              # every file ending in .conf
+ls host?.txt           # host1.txt, hostA.txt (single char)
+ls report[0-9].log     # report0.log through report9.log
+ls /etc/[!a-m]*        # entries not starting with a through m
+touch file{1..5}.txt   # creates file1.txt ... file5.txt
+mkdir -p project/{src,bin,docs}
+```
+
+Bash also provides predefined character classes inside brackets:
+
+```bash
+ls [[:upper:]]*        # files whose name starts with a capital letter
+ls [[:digit:]]*        # files whose name starts with a digit
+```
+
+Because globbing happens in the shell, quoting a pattern stops the expansion and passes the literal string to the command — which matters when you *want* the program itself (like `find`) to interpret it:
+
+```bash
+find . -name "*.log"   # quotes protect * so find, not the shell, expands it
+```
+
+---
+
+## Pattern Matching With Regular Expressions
+
+Globbing matches file names; **regular expressions** (regex) match *text* inside files or streams. They look similar but the metacharacters mean different things. Regex is the language of tools like `grep`, `sed`, and `awk`.
+
+Basic Regular Expression (BRE) metacharacters:
+
+- `.` — any single character.
+- `*` — zero or more of the preceding character.
+- `^` — anchor to the start of a line.
+- `$` — anchor to the end of a line.
+- `[...]` — a character class, as in globbing.
+- `\` — escape a metacharacter to match it literally.
+
+Extended Regular Expressions (ERE), enabled with `grep -E`, add `+`, `?`, `|`, and grouping `()`:
+
+```bash
+grep '^root' /etc/passwd          # lines starting with "root"
+grep 'bash$' /etc/passwd          # lines ending with "bash"
+grep '^#' /etc/ssh/sshd_config    # comment lines
+grep -v '^#' /etc/ssh/sshd_config # everything except comments
+grep -E 'error|warning' app.log   # lines with "error" OR "warning"
+grep -E '[0-9]{3}-[0-9]{4}' data  # a phone-like pattern
+grep -iE 'fail(ed|ure)?' auth.log # case-insensitive, optional suffix
+```
+
+The distinction to internalize: `*` in globbing means "any characters," but `*` in regex means "zero or more of the previous character." Mixing them up is one of the most common command-line mistakes.
+
+---
+
+## Configuring the Shell Environment
+
+When Bash starts, it reads a series of initialization files. Which files it reads depends on whether the shell is a **login** shell (you authenticated, e.g. via SSH or console) or a **non-login interactive** shell (you opened a new terminal in an existing session).
+
+System-wide configuration (affects every user), read for login shells:
+
+- `/etc/profile` — the main system-wide login script.
+- `/etc/profile.d/*.sh` — drop-in scripts sourced by `/etc/profile`. This is the correct place to add system-wide settings.
+
+Per-user configuration:
+
+- `~/.bash_profile` — read for login shells; typically the place for environment variables and one-time setup.
+- `~/.bashrc` — read for non-login interactive shells; the place for aliases, functions, and prompt settings.
+
+The convention on RHEL is that `~/.bash_profile` sources `~/.bashrc`, so settings in `.bashrc` apply to both shell types. Because of this, aliases and functions usually go in `~/.bashrc`.
+
+Define a persistent alias and a custom variable for your user:
+
+```bash
+# add to ~/.bashrc
+alias ll='ls -lah --color=auto'
+alias ports='ss -tulpn'
+export EDITOR=vim
+```
+
+Apply changes without logging out by **sourcing** the file:
+
+```bash
+source ~/.bashrc
+# or the shorthand
+. ~/.bashrc
+```
+
+To add a system-wide variable for all users, create a drop-in rather than editing `/etc/profile` directly:
+
+```bash
+sudo tee /etc/profile.d/stackdeploy.sh > /dev/null <<'EOF'
+export COMPANY="StackDeploy"
+export PATH="$PATH:/opt/stackdeploy/bin"
+EOF
+```
+
+Using `/etc/profile.d/` keeps your changes separate from vendor files, so package updates never overwrite them — a small habit that pays off in maintainability.
+
+---
+
+## Lab: Put It All Together
+
+Try this sequence to exercise everything in one flow:
+
+```bash
+# 1. Environment variable + command substitution
+export TODAY=$(date +%F)
+
+# 2. Globbing to create sample files
+touch /tmp/log{1..3}.txt /tmp/data.csv
+
+# 3. Redirection and piping
+ls /tmp/*.txt | tee /tmp/inventory-$TODAY.txt | wc -l
+
+# 4. Regex search
+grep -E '\.txt$' /tmp/inventory-$TODAY.txt
+
+# 5. Persist an alias
+echo "alias tmpls='ls -l /tmp/*.txt'" >> ~/.bashrc
+source ~/.bashrc
+tmpls
+```
+
+If every step behaves as expected, you have exercised variables, substitution, globbing, redirection, piping, regex, and shell configuration in a single workflow.
+
+---
+
+## Wrapping Up
+
+The Bash shell is not just a place to type commands — it is a programmable, feature-rich environment that rewards fluency. You now know how to manage shell and environment variables, use command and variable substitution, move through the command line quickly with completion and history, redirect and pipe data streams with metacharacters, match file names with globbing, match text with regular expressions, and make your customizations permanent at both the system and user level.
+
+Master these fundamentals and every later topic — scripting, automation, container entrypoints, CI/CD pipelines — becomes noticeably easier, because all of them are built on top of the shell.
+
+========================================================
+  NOTAS PARA REVISIÓN:
+  [x] Ortografía revisada
+  [x] Comandos verificados en lab
+  [x] Links externos funcionando
+  [x] Estructura de headings correcta
+  [x] SEO revisado
+========================================================

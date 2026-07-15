@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastering the Bash Shell in RHEL | StackDeploy</title>
+<meta name="description" content="Master the Bash shell in RHEL. Learn shell and environment variables, command and variable substitution, tab completion, history, redirection, pipes, filename globbing, regular expressions, and how to configure system-wide and per-user shell environments. RHCSA prep included.">
+<meta name="keywords" content="bash shell rhel, shell environment variables, command substitution bash, bash redirection piping, filename globbing linux, regular expressions grep, bashrc bash_profile, rhcsa bash shell, tab completion command history">
+<meta name="author" content="Andres Bernal">
+<meta property="og:title" content="Mastering the Bash Shell in RHEL">
+<meta property="og:description" content="Master the Bash shell in RHEL. Learn shell and environment variables, command and variable substitution, tab completion, history, redirection, pipes, filename globbing, regular expressions, and how to configure system-wide and per-user shell environments. RHCSA prep included.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://stackdeploy.dev/articles/mastering-the-bash-shell-in-rhel">
+<link rel="canonical" href="https://stackdeploy.dev/articles/mastering-the-bash-shell-in-rhel">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --dark: #111; --card: #141414;
+    --accent: #b0b0b0; --white: #f0f0f0; --gray: #888; --border: #222;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; line-height:1.8; }
+
+  /* NAV */
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+    color:var(--accent); text-decoration:none; }
+  .nav-links { display:flex; gap:8px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; padding:8px 16px; border:1px solid transparent;
+    transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
+  .nav-links a:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ARTICLE */
+  .article-wrapper { max-width:780px; margin:0 auto; padding:100px 40px 80px; }
+
+  .article-meta { margin-bottom:40px; }
+  .meta-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .meta-tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white);
+    background:#2a2a2a; padding:4px 10px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid #3a3a3a; }
+  .meta-tag.accent { background:var(--accent); color:var(--black); border-color:var(--accent); }
+  .article-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,6vw,64px);
+    line-height:1; letter-spacing:1px; color:var(--white); margin-bottom:16px; }
+  .article-excerpt { font-size:16px; color:var(--gray); line-height:1.7;
+    font-weight:300; margin-bottom:24px; border-left:3px solid var(--accent); padding-left:20px; }
+  .article-info { display:flex; gap:24px; font-family:'Space Mono',monospace;
+    font-size:11px; color:#555; flex-wrap:wrap; }
+  .article-info span { color:var(--accent); }
+
+  /* CONTENT */
+  .article-content { border-top:1px solid var(--border); padding-top:48px; }
+  .article-content h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; margin:48px 0 16px; color:var(--accent); }
+  .article-content h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; margin:40px 0 16px;
+    color:var(--white); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .article-content h3 { font-family:'Bebas Neue',sans-serif; font-size:24px; margin:32px 0 12px; color:var(--accent); }
+  .article-content h4 { font-size:16px; font-weight:600; margin:24px 0 8px; color:var(--white); }
+  .article-content p { font-size:15px; color:#ccc; margin-bottom:20px; line-height:1.8; }
+  .article-content ul { margin:16px 0 24px 0; padding-left:0; list-style:none; }
+  .article-content li { font-size:15px; color:#ccc; padding:6px 0 6px 20px;
+    border-left:2px solid var(--border); margin-bottom:4px; position:relative; }
+  .article-content li::before { content:'→'; position:absolute; left:-20px; color:var(--accent); }
+  .article-content hr { border:none; border-top:1px solid var(--border); margin:40px 0; }
+  .article-content strong { color:var(--white); font-weight:600; }
+  .article-content em { color:var(--accent); font-style:italic; }
+  .article-content a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(176,176,176,0.3); }
+  .article-content a:hover { border-bottom-color:var(--accent); }
+  .article-content code { font-family:'Space Mono',monospace; font-size:12px;
+    background:#1a1a1a; color:var(--accent); padding:2px 6px; border:1px solid var(--border); }
+
+  /* CODE BLOCKS */
+  .code-block { background:#0d0d0d; border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+  .code-header { display:flex; align-items:center; justify-content:space-between;
+    padding:8px 16px; background:#111; border-bottom:1px solid var(--border); }
+  .code-lang { font-family:'Space Mono',monospace; font-size:10px; color:var(--accent);
+    letter-spacing:2px; text-transform:uppercase; }
+  .copy-btn { font-family:'Space Mono',monospace; font-size:9px; color:var(--gray);
+    background:transparent; border:1px solid var(--border); padding:4px 10px;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .code-block pre { padding:20px; overflow-x:auto; }
+  .code-block code { background:transparent; border:none; padding:0;
+    font-size:13px; color:#e0e0e0; line-height:1.6; }
+
+  /* FOOTER */
+  .article-footer { margin-top:80px; padding-top:40px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .back-link { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border); padding:10px 20px; transition:all 0.2s; }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); }
+  .author-block { font-family:'Space Mono',monospace; font-size:11px; color:#555; }
+  .author-block span { color:var(--accent); }
+
+  /* PAGE FOOTER */
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+
+  @media(max-width:768px) {
+    nav { padding:0 20px; } .nav-links { display:none; }
+    .article-wrapper { padding:90px 20px 60px; }
+    footer { padding:24px 20px; flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/articles">Articles</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrapper">
+  <div class="article-meta">
+    <div class="meta-tags">
+      <span class="meta-tag accent"></span>
+      <span class="meta-tag">Intermediate</span>
+      <span class="meta-tag">11 MIN READ</span>
+    </div>
+    <h1 class="article-title">Mastering the Bash Shell in RHEL</h1>
+    <p class="article-excerpt">Master the Bash shell in RHEL. Learn shell and environment variables, command and variable substitution, tab completion, history, redirection, pipes, filename globbing, regular expressions, and how to configure system-wide and per-user shell environments. RHCSA prep included.</p>
+    <div class="article-info">
+      <span>BY <span>Andres Bernal (@abernal093)</span></span>
+      <span>PUBLISHED <span>2026-07-15</span></span>
+      <span>STACKDEPLOY.DEV</span>
+    </div>
+  </div>
+
+  <div class="article-content">
+    <h1>Mastering the Bash Shell in RHEL</h1>
+
+<p>The shell is the primary interface between a system administrator and the operating system. On Red Hat Enterprise Linux, the default shell is <strong>Bash</strong> (the Bourne-Again Shell), and knowing it well is the difference between fighting the command line and flowing through it. This chapter walks through everything you need to navigate and interact with the system efficiently: managing shell and environment variables, using command and variable substitution, leveraging productivity features like tab completion and command history, wielding metacharacters for redirection and piping, matching filenames with globbing, matching text with regular expressions, and finally configuring the shell environment both system-wide and per user.</p>
+
+<p>Every command below runs on a standard RHEL 9/10 installation. Try them in a lab, not in production.</p>
+
+<hr>
+
+<h2>What Is the Shell?</h2>
+
+<p>A shell is a command interpreter. It reads the lines you type, expands and interprets them, launches the corresponding programs, and returns their output. Bash is one of several shells available on Linux, but it is the default login shell for most RHEL users.</p>
+
+<p>You can confirm which shell you are running and where it lives:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">echo $SHELL
+# /bin/bash
+
+which bash
+# /usr/bin/bash
+
+cat /etc/shells
+# lists all valid login shells on the system</code></pre></div>
+
+<p>The <code>$SHELL</code> variable holds the path to your <strong>login</strong> shell, defined in <code>/etc/passwd</code>. To see the process actually interpreting your current session, inspect the parent process instead:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ps -p $$ -o comm=
+# bash</code></pre></div>
+
+<p>Here <code>$$</code> is a special variable that expands to the PID of the current shell.</p>
+
+<hr>
+
+<h2>Navigating and Interacting With the System Efficiently</h2>
+
+<p>Before diving into advanced features, a quick reminder of the movement primitives. The shell always has a <strong>present working directory</strong>, and most navigation revolves around it.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">pwd                 # print working directory
+cd /etc             # change to an absolute path
+cd ..               # move up one level
+cd -                # jump back to the previous directory
+cd                  # with no argument, return to your home directory
+cd ~user            # go to another user's home (if permitted)</code></pre></div>
+
+<p>The tilde <code>~</code> is shorthand for your home directory, and <code>~-</code> expands to the previous directory (the same target as <code>cd -</code>). Chaining these with the productivity features below is what makes an administrator fast.</p>
+
+<hr>
+
+<h2>Shell and Environment Variables</h2>
+
+<p>A <strong>variable</strong> is a named piece of memory that stores a value. Bash distinguishes between two scopes:</p>
+
+<ul>
+<li><strong>Shell (local) variables</strong> exist only in the current shell. Child processes do not inherit them.</li>
+<li><strong>Environment variables</strong> are exported, so they are passed down to any process the shell launches.</li>
+</ul>
+
+<p>Create and read a shell variable:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">GREETING="hello stackdeploy"
+echo $GREETING
+# hello stackdeploy</code></pre></div>
+
+<p>There must be <strong>no spaces</strong> around the <code>=</code> sign. <code>NAME = value</code> is interpreted as a command named <code>NAME</code>, not an assignment.</p>
+
+<p>Promote a shell variable to an environment variable with <code>export</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">export GREETING
+# or define and export in one line:
+export PROJECT="stackdeploy"</code></pre></div>
+
+<p>To prove the difference, define a local variable and a child process will not see it:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">LOCALVAR="only here"
+bash -c 'echo "child sees: $LOCALVAR"'
+# child sees:
+
+export EXPORTED="now visible"
+bash -c 'echo "child sees: $EXPORTED"'
+# child sees: now visible</code></pre></div>
+
+<p>Inspect the environment with <code>env</code> or <code>printenv</code>, and list all shell variables with <code>set</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">printenv                # all environment variables
+printenv HOME           # a single variable
+env | grep -i path      # filter the environment
+set | head              # every shell variable and function</code></pre></div>
+
+<p>Remove a variable with <code>unset</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">unset GREETING</code></pre></div>
+
+<p>Some environment variables you will use constantly:</p>
+
+<ul>
+<li><code>PATH</code> — the colon-separated list of directories searched for commands.</li>
+<li><code>HOME</code> — your home directory.</li>
+<li><code>USER</code> and <code>LOGNAME</code> — your username.</li>
+<li><code>PWD</code> and <code>OLDPWD</code> — current and previous working directories.</li>
+<li><code>PS1</code> — the format string for your primary prompt.</li>
+</ul>
+
+<p>Extend your <code>PATH</code> without clobbering it by referencing the old value:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">export PATH="$PATH:$HOME/bin"
+echo $PATH</code></pre></div>
+
+<hr>
+
+<h2>Command and Variable Substitution</h2>
+
+<p><strong>Variable substitution</strong> replaces <code>$VAR</code> (or the safer <code>${VAR}</code>) with its value. Braces are essential when the variable name touches other characters:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">FILE="report"
+echo "$FILE_2026"     # looks for a variable named FILE_2026 -&gt; empty
+echo "${FILE}_2026"   # report_2026</code></pre></div>
+
+<p><strong>Command substitution</strong> runs a command and replaces the expression with its output. The modern <code>$(...)</code> syntax is preferred over legacy backticks because it nests cleanly:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">echo "Today is $(date +%F)"
+# Today is 2026-07-15
+
+KERNEL=$(uname -r)
+echo "Running kernel: $KERNEL"
+
+# Nesting is easy with $(...)
+echo "Files here: $(ls $(pwd) | wc -l)"</code></pre></div>
+
+<p>A related expansion is <strong>arithmetic substitution</strong> with <code>$((...))</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">echo $(( 4 * 1024 ))
+# 4096
+
+COUNT=5
+echo $(( COUNT + 1 ))
+# 6</code></pre></div>
+
+<p>Understanding quoting is critical here. Double quotes allow substitution; single quotes suppress it entirely:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">echo "Home is $HOME"     # Home is /root
+echo 'Home is $HOME'     # Home is $HOME</code></pre></div>
+
+<hr>
+
+<h2>Shell Productivity Features</h2>
+
+<p>Bash ships with features that dramatically reduce keystrokes and errors.</p>
+
+<h3>Tab Completion</h3>
+
+<p>Press <strong>Tab</strong> to complete commands, file names, paths, and — on RHEL, thanks to the <code>bash-completion</code> package — even subcommands and options. Press Tab twice to list all matching candidates when the completion is ambiguous.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">sudo dnf install bash-completion   # if not already present
+# type: systemctl re&lt;Tab&gt;&lt;Tab&gt;
+# restart  reload  reload-or-restart  reset-failed ...</code></pre></div>
+
+<h3>Command History</h3>
+
+<p>Every command you run is stored in memory and written to <code>~/.bash_history</code> on logout. Recall and search it:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">history            # numbered list of past commands
+history 10         # last 10 commands
+!!                 # repeat the previous command
+!123               # run command number 123 from history
+!ssh               # run the most recent command starting with "ssh"
+!$                 # the last argument of the previous command</code></pre></div>
+
+<p>Press <strong>Ctrl+r</strong> to start a reverse incremental search — begin typing and Bash finds the most recent matching command. Useful history-related variables include <code>HISTSIZE</code> (commands kept in memory) and <code>HISTFILESIZE</code> (commands kept on disk).</p>
+
+<h3>Editing the Command Line and Quick Navigation</h3>
+
+<p>Bash uses Emacs-style key bindings by default. The essential ones:</p>
+
+<ul>
+<li><strong>Ctrl+a</strong> / <strong>Ctrl+e</strong> — jump to the beginning / end of the line.</li>
+<li><strong>Ctrl+u</strong> / <strong>Ctrl+k</strong> — delete from the cursor to the beginning / end of the line.</li>
+<li><strong>Ctrl+w</strong> — delete the word before the cursor.</li>
+<li><strong>Alt+b</strong> / <strong>Alt+f</strong> — move backward / forward one word.</li>
+<li><strong>Ctrl+l</strong> — clear the screen (same as <code>clear</code>).</li>
+</ul>
+
+<p>Combined with tab completion and <code>Ctrl+r</code>, these turn the command line into a fast editing surface rather than a place where you retype long paths.</p>
+
+<hr>
+
+<h2>Metacharacters, Redirection, and Piping</h2>
+
+<p>The shell reserves certain characters — <code>> < | & ; * ? [ ] ( ) { } $ \ " '</code> — as <strong>metacharacters</strong> with special meaning. Two of the most powerful groups control where a program's input and output go.</p>
+
+<p>Every process has three default channels: <strong>stdin</strong> (0), <strong>stdout</strong> (1), and <strong>stderr</strong> (2).</p>
+
+<h3>Redirection</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">command &gt; file       # redirect stdout, overwriting the file
+command &gt;&gt; file      # redirect stdout, appending
+command 2&gt; file      # redirect stderr only
+command &gt; out 2&gt; err # stdout and stderr to separate files
+command &amp;&gt; file      # both stdout and stderr to one file
+command &lt; file       # feed a file to stdin
+command 2&gt;&amp;1         # send stderr to wherever stdout is going</code></pre></div>
+
+<p>A classic pattern discards noise by sending it to the "black hole" device:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">find / -name "*.conf" 2&gt; /dev/null
+# suppress "Permission denied" errors, keep real results</code></pre></div>
+
+<h3>Piping</h3>
+
+<p>A <strong>pipe</strong> (<code>|</code>) connects the stdout of one command to the stdin of the next, letting you build processing chains:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ps aux | grep sshd | grep -v grep
+dnf list installed | wc -l
+cat /etc/passwd | cut -d: -f1 | sort | head</code></pre></div>
+
+<p>The <code>tee</code> command splits a stream, writing to a file <strong>and</strong> passing it along:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">dnf list installed | tee packages.txt | wc -l</code></pre></div>
+
+<hr>
+
+<h2>Pattern Matching With Filename Globbing</h2>
+
+<p><strong>Globbing</strong> (also called filename expansion or wildcards) is how the shell matches file names <em>before</em> a command runs. The shell expands the pattern into a list of matching files and hands that list to the command.</p>
+
+<ul>
+<li><code>*</code> — matches any number of characters (including none).</li>
+<li><code>?</code> — matches exactly one character.</li>
+<li><code>[abc]</code> — matches any single character in the set.</li>
+<li><code>[!abc]</code> or <code>[^abc]</code> — matches any single character not in the set.</li>
+<li><code>[a-z]</code> — matches any character in the range.</li>
+<li><code>{one,two,three}</code> — brace expansion generates each listed string.</li>
+</ul>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ls *.conf              # every file ending in .conf
+ls host?.txt           # host1.txt, hostA.txt (single char)
+ls report[0-9].log     # report0.log through report9.log
+ls /etc/[!a-m]*        # entries not starting with a through m
+touch file{1..5}.txt   # creates file1.txt ... file5.txt
+mkdir -p project/{src,bin,docs}</code></pre></div>
+
+<p>Bash also provides predefined character classes inside brackets:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ls [[:upper:]]*        # files whose name starts with a capital letter
+ls [[:digit:]]*        # files whose name starts with a digit</code></pre></div>
+
+<p>Because globbing happens in the shell, quoting a pattern stops the expansion and passes the literal string to the command — which matters when you <em>want</em> the program itself (like <code>find</code>) to interpret it:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">find . -name "*.log"   # quotes protect * so find, not the shell, expands it</code></pre></div>
+
+<hr>
+
+<h2>Pattern Matching With Regular Expressions</h2>
+
+<p>Globbing matches file names; <strong>regular expressions</strong> (regex) match <em>text</em> inside files or streams. They look similar but the metacharacters mean different things. Regex is the language of tools like <code>grep</code>, <code>sed</code>, and <code>awk</code>.</p>
+
+<p>Basic Regular Expression (BRE) metacharacters:</p>
+
+<ul>
+<li><code>.</code> — any single character.</li>
+<li><code>*</code> — zero or more of the preceding character.</li>
+<li><code>^</code> — anchor to the start of a line.</li>
+<li><code>$</code> — anchor to the end of a line.</li>
+<li><code>[...]</code> — a character class, as in globbing.</li>
+<li><code>\</code> — escape a metacharacter to match it literally.</li>
+</ul>
+
+<p>Extended Regular Expressions (ERE), enabled with <code>grep -E</code>, add <code>+</code>, <code>?</code>, <code>|</code>, and grouping <code>()</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">grep '^root' /etc/passwd          # lines starting with "root"
+grep 'bash$' /etc/passwd          # lines ending with "bash"
+grep '^#' /etc/ssh/sshd_config    # comment lines
+grep -v '^#' /etc/ssh/sshd_config # everything except comments
+grep -E 'error|warning' app.log   # lines with "error" OR "warning"
+grep -E '[0-9]{3}-[0-9]{4}' data  # a phone-like pattern
+grep -iE 'fail(ed|ure)?' auth.log # case-insensitive, optional suffix</code></pre></div>
+
+<p>The distinction to internalize: <code><em></code> in globbing means "any characters," but <code></em></code> in regex means "zero or more of the previous character." Mixing them up is one of the most common command-line mistakes.</p>
+
+<hr>
+
+<h2>Configuring the Shell Environment</h2>
+
+<p>When Bash starts, it reads a series of initialization files. Which files it reads depends on whether the shell is a <strong>login</strong> shell (you authenticated, e.g. via SSH or console) or a <strong>non-login interactive</strong> shell (you opened a new terminal in an existing session).</p>
+
+<p>System-wide configuration (affects every user), read for login shells:</p>
+
+<ul>
+<li><code>/etc/profile</code> — the main system-wide login script.</li>
+<li><code>/etc/profile.d/*.sh</code> — drop-in scripts sourced by <code>/etc/profile</code>. This is the correct place to add system-wide settings.</li>
+</ul>
+
+<p>Per-user configuration:</p>
+
+<ul>
+<li><code>~/.bash_profile</code> — read for login shells; typically the place for environment variables and one-time setup.</li>
+<li><code>~/.bashrc</code> — read for non-login interactive shells; the place for aliases, functions, and prompt settings.</li>
+</ul>
+
+<p>The convention on RHEL is that <code>~/.bash_profile</code> sources <code>~/.bashrc</code>, so settings in <code>.bashrc</code> apply to both shell types. Because of this, aliases and functions usually go in <code>~/.bashrc</code>.</p>
+
+<p>Define a persistent alias and a custom variable for your user:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># add to ~/.bashrc
+alias ll='ls -lah --color=auto'
+alias ports='ss -tulpn'
+export EDITOR=vim</code></pre></div>
+
+<p>Apply changes without logging out by <strong>sourcing</strong> the file:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">source ~/.bashrc
+# or the shorthand
+. ~/.bashrc</code></pre></div>
+
+<p>To add a system-wide variable for all users, create a drop-in rather than editing <code>/etc/profile</code> directly:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">sudo tee /etc/profile.d/stackdeploy.sh &gt; /dev/null &lt;&lt;'EOF'
+export COMPANY="StackDeploy"
+export PATH="$PATH:/opt/stackdeploy/bin"
+EOF</code></pre></div>
+
+<p>Using <code>/etc/profile.d/</code> keeps your changes separate from vendor files, so package updates never overwrite them — a small habit that pays off in maintainability.</p>
+
+<hr>
+
+<h2>Lab: Put It All Together</h2>
+
+<p>Try this sequence to exercise everything in one flow:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash"># 1. Environment variable + command substitution
+export TODAY=$(date +%F)
+
+# 2. Globbing to create sample files
+touch /tmp/log{1..3}.txt /tmp/data.csv
+
+# 3. Redirection and piping
+ls /tmp/*.txt | tee /tmp/inventory-$TODAY.txt | wc -l
+
+# 4. Regex search
+grep -E '\.txt$' /tmp/inventory-$TODAY.txt
+
+# 5. Persist an alias
+echo "alias tmpls='ls -l /tmp/*.txt'" &gt;&gt; ~/.bashrc
+source ~/.bashrc
+tmpls</code></pre></div>
+
+<p>If every step behaves as expected, you have exercised variables, substitution, globbing, redirection, piping, regex, and shell configuration in a single workflow.</p>
+
+<hr>
+
+<h2>Wrapping Up</h2>
+
+<p>The Bash shell is not just a place to type commands — it is a programmable, feature-rich environment that rewards fluency. You now know how to manage shell and environment variables, use command and variable substitution, move through the command line quickly with completion and history, redirect and pipe data streams with metacharacters, match file names with globbing, match text with regular expressions, and make your customizations permanent at both the system and user level.</p>
+
+<p>Master these fundamentals and every later topic — scripting, automation, container entrypoints, CI/CD pipelines — becomes noticeably easier, because all of them are built on top of the shell.</p>
+  </div>
+
+  <div class="article-footer">
+    <a href="/" class="back-link">← Back to Articles</a>
+    <div class="author-block">Written by <span>Andres Bernal</span> | <span>@abernal093</span></div>
+  </div>
+</article>
+
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+</script>
+</body>
+</html>

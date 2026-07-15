@@ -1,0 +1,11 @@
+{
+  "title": "Mastering the Bash Shell in RHEL",
+  "slug": "mastering-the-bash-shell-in-rhel",
+  "category": "RHEL / Linux",
+  "publish_date": "2026-07-15",
+  "excerpt": "Master the Bash shell in RHEL. Learn shell and environment variables, command and variable substitution, tab completion, history, redirection, pipes, filename globbing, regular expressions, and how to configure system-wide and per-user shell environments. RHCSA prep included.",
+  "social_text": "New on StackDeploy: Mastering the Bash Shell in RHEL — variables, substitution, redirection, piping, globbing, regex, and shell config. RHCSA prep inside. #Linux #RHEL #Bash #RHCSA #DevOps",
+  "approved_by": "Andres Bernal",
+  "approved_at": "2026-07-15 00:00:00",
+  "status": "ready"
+}
