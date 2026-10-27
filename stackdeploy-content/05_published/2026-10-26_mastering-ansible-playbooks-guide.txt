@@ -1,0 +1,204 @@
+========================================================
+  STACKDEPLOY — ARTÍCULO EN BORRADOR
+========================================================
+TÍTULO:       Mastering Ansible Playbooks: A Practical Guide
+SLUG:         mastering-ansible-playbooks-guide
+FECHA:        2026-10-26
+CATEGORÍA:    Ansible
+NIVEL:        Intermediate
+ESTADO:       LISTO PARA PUBLICAR
+AUTOR:        Andres Bernal (@abernal093)
+CREADO:       20261026_195026
+--------------------------------------------------------
+DESCRIPCIÓN SEO:
+Master Ansible Playbooks to automate infrastructure tasks efficiently. Learn structure, YAML syntax, modules, handlers, and variables in this practical guide.
+
+KEYWORDS:
+ansible playbooks, infrastructure as code, yaml syntax, ansible modules, devops automation, configuration management, ansible handlers, linux automation, server provisioning, ansible tutorial
+========================================================
+
+CUERPO DEL ARTÍCULO:
+──────────────────────────────────────────────────────
+
+# Mastering Ansible Playbooks: A Practical Guide
+
+Infrastructure as Code (IaC) is the cornerstone of modern DevOps. While running ad-hoc commands with `ansible` is useful for quick checks, **Ansible Playbooks** are where the true power of automation resides. Playbooks allow you to define complex configurations, orchestrate multi-step deployments, and ensure your infrastructure remains in a desired state.
+
+In this guide, we will break down the anatomy of a playbook, explore best practices for writing clean YAML, and demonstrate how to build modular configurations that scale with your environment.
+
+---
+
+## The Anatomy of an Ansible Playbook
+
+An Ansible Playbook is a YAML file that describes a set of tasks to be executed against managed nodes. Unlike imperative scripts that define *how* to perform a task, Playbooks are declarative—you define *what* the end state should look like, and Ansible handles the heavy lifting.
+
+A standard playbook structure looks like this:
+
+```yaml
+---
+- name: Configure Web Server
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Ensure Apache is installed
+      ansible.builtin.package:
+        name: httpd
+        state: present
+
+    - name: Ensure service is running
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+```
+
+Every playbook starts with three dashes (`---`). The `hosts` directive maps to your inventory file, `become` handles privilege escalation, and `tasks` represent the sequential actions to be taken.
+
+---
+
+## Mastering YAML Syntax
+
+Ansible relies heavily on **YAML (Yet Another Markup Language)**. Because indentation is significant, even a single space error can break your automation.
+
+1. **Indentation:** Always use spaces, never tabs. Two spaces per level is the standard.
+2. **Lists:** Indicated by a dash `-`.
+3. **Dictionaries:** Key-value pairs separated by a colon and a space `: `.
+
+Consider this nested structure for installing multiple packages:
+
+```yaml
+tasks:
+  - name: Install core utilities
+    ansible.builtin.package:
+      name:
+        - vim
+        - git
+        - curl
+        - wget
+      state: latest
+```
+
+Using lists for packages is more efficient than creating multiple tasks, as it reduces the number of times Ansible checks the package manager’s state.
+
+---
+
+## Working with Variables and Facts
+
+To make your playbooks dynamic, you should avoid hardcoding values. **Variables** allow you to reuse playbooks across different environments (dev, staging, production) while keeping the underlying logic consistent.
+
+### Defining Variables
+You can define variables directly in the playbook, in your inventory, or within `group_vars` and `host_vars` files.
+
+```yaml
+- name: Web Server Setup
+  hosts: webservers
+  vars:
+    web_port: 8080
+  tasks:
+    - name: Copy configuration file
+      ansible.builtin.template:
+        src: httpd.conf.j2
+        dest: /etc/httpd/conf/httpd.conf
+```
+
+### Ansible Facts
+Ansible automatically collects data about your managed nodes when a playbook runs. This data is known as **Facts**. You can view these facts by running:
+
+```bash
+ansible all -m setup
+```
+
+You can use these variables in your tasks, for example: `{{ ansible_distribution }}` or `{{ ansible_memtotal_mb }}`.
+
+---
+
+## Handlers: Triggering Events
+
+Sometimes, an action should only occur if a previous task resulted in a change. This is the perfect use case for **Handlers**.
+
+For example, you don’t need to restart your web server every time a playbook runs; you only need to restart it if the configuration file has been updated.
+
+```yaml
+tasks:
+  - name: Copy site configuration
+    ansible.builtin.template:
+      src: index.html.j2
+      dest: /var/www/html/index.html
+    notify: Restart Apache
+
+handlers:
+  - name: Restart Apache
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+```
+
+Handlers run only once, at the very end of the playbook, regardless of how many tasks notified them. This prevents redundant service restarts.
+
+---
+
+## Best Practices for Scaling Playbooks
+
+As your infrastructure grows, maintaining a single massive YAML file becomes impossible. Follow these strategies to keep your code maintainable:
+
+1. **Use Roles:** Roles allow you to bundle tasks, handlers, variables, and templates into a standard directory structure. This promotes reusability across different projects.
+2. **Keep Tasks Small:** A task should do one thing. If your task description is a paragraph long, break it up.
+3. **Use Idempotency:** Ensure your tasks are idempotent—they should produce the same result regardless of whether they have run once or a hundred times.
+4. **Version Control:** Store your playbooks in Git. Treat your infrastructure code with the same rigor as your application code.
+
+---
+
+## Practical Lab: Your First Automation
+
+Let’s apply what we have learned. We will create a playbook to secure a Linux server by creating a custom user and hardening the SSH configuration.
+
+### 1. Create the Playbook `setup_server.yml`
+```yaml
+---
+- name: Initial Server Hardening
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create sysadmin user
+      ansible.builtin.user:
+        name: sysadmin
+        state: present
+        groups: wheel
+
+    - name: Disable SSH root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+```
+
+### 2. Verify Syntax
+Before running, always check your YAML syntax:
+```bash
+ansible-playbook setup_server.yml --syntax-check
+```
+
+### 3. Run the Playbook
+```bash
+ansible-playbook -i inventory.ini setup_server.yml
+```
+
+Monitor the output. Ansible will display "OK" for tasks that require no changes and "changed" for tasks where it actually performed an action. This is the definition of infrastructure as code in action.
+
+By mastering these fundamentals, you move from simply managing servers to orchestrating your entire data center with predictable, repeatable, and scalable code.
+
+========================================================
+  NOTAS PARA REVISIÓN:
+  [x] Spelling correct
+  [x] Commands verified
+  [x] SEO description under 160 chars
+  [x] Heading structure correct
+  [x] Title has main keyword
+========================================================

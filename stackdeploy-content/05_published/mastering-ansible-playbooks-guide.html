@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastering Ansible Playbooks: A Practical Guide | StackDeploy</title>
+<meta name="description" content="Master Ansible Playbooks to automate infrastructure tasks efficiently. Learn structure, YAML syntax, modules, handlers, and variables in this practical guide.">
+<meta name="keywords" content="ansible playbooks, infrastructure as code, yaml syntax, ansible modules, devops automation, configuration management, ansible handlers, linux automation, server provisioning, ansible tutorial">
+<meta name="author" content="Andres Bernal">
+<meta property="og:title" content="Mastering Ansible Playbooks: A Practical Guide">
+<meta property="og:description" content="Master Ansible Playbooks to automate infrastructure tasks efficiently. Learn structure, YAML syntax, modules, handlers, and variables in this practical guide.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://stackdeploy.dev/articles/mastering-ansible-playbooks-guide">
+<link rel="canonical" href="https://stackdeploy.dev/articles/mastering-ansible-playbooks-guide">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --dark: #111; --card: #141414;
+    --accent: #b0b0b0; --white: #f0f0f0; --gray: #888; --border: #222;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; line-height:1.8; }
+
+  /* NAV */
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+    color:var(--accent); text-decoration:none; }
+  .nav-links { display:flex; gap:8px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; padding:8px 16px; border:1px solid transparent;
+    transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
+  .nav-links a:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ARTICLE */
+  .article-wrapper { max-width:780px; margin:0 auto; padding:100px 40px 80px; }
+
+  .article-meta { margin-bottom:40px; }
+  .meta-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .meta-tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white);
+    background:#2a2a2a; padding:4px 10px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid #3a3a3a; }
+  .meta-tag.accent { background:var(--accent); color:var(--black); border-color:var(--accent); }
+  .article-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,6vw,64px);
+    line-height:1; letter-spacing:1px; color:var(--white); margin-bottom:16px; }
+  .article-excerpt { font-size:16px; color:var(--gray); line-height:1.7;
+    font-weight:300; margin-bottom:24px; border-left:3px solid var(--accent); padding-left:20px; }
+  .article-info { display:flex; gap:24px; font-family:'Space Mono',monospace;
+    font-size:11px; color:#555; flex-wrap:wrap; }
+  .article-info span { color:var(--accent); }
+
+  /* CONTENT */
+  .article-content { border-top:1px solid var(--border); padding-top:48px; }
+  .article-content h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; margin:48px 0 16px; color:var(--accent); }
+  .article-content h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; margin:40px 0 16px;
+    color:var(--white); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .article-content h3 { font-family:'Bebas Neue',sans-serif; font-size:24px; margin:32px 0 12px; color:var(--accent); }
+  .article-content h4 { font-size:16px; font-weight:600; margin:24px 0 8px; color:var(--white); }
+  .article-content p { font-size:15px; color:#ccc; margin-bottom:20px; line-height:1.8; }
+  .article-content ul { margin:16px 0 24px 0; padding-left:0; list-style:none; }
+  .article-content li { font-size:15px; color:#ccc; padding:6px 0 6px 20px;
+    border-left:2px solid var(--border); margin-bottom:4px; position:relative; }
+  .article-content li::before { content:'→'; position:absolute; left:-20px; color:var(--accent); }
+  .article-content hr { border:none; border-top:1px solid var(--border); margin:40px 0; }
+  .article-content strong { color:var(--white); font-weight:600; }
+  .article-content em { color:var(--accent); font-style:italic; }
+  .article-content a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(176,176,176,0.3); }
+  .article-content a:hover { border-bottom-color:var(--accent); }
+  .article-content code { font-family:'Space Mono',monospace; font-size:12px;
+    background:#1a1a1a; color:var(--accent); padding:2px 6px; border:1px solid var(--border); }
+
+  /* CODE BLOCKS */
+  .code-block { background:#0d0d0d; border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+  .code-header { display:flex; align-items:center; justify-content:space-between;
+    padding:8px 16px; background:#111; border-bottom:1px solid var(--border); }
+  .code-lang { font-family:'Space Mono',monospace; font-size:10px; color:var(--accent);
+    letter-spacing:2px; text-transform:uppercase; }
+  .copy-btn { font-family:'Space Mono',monospace; font-size:9px; color:var(--gray);
+    background:transparent; border:1px solid var(--border); padding:4px 10px;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .code-block pre { padding:20px; overflow-x:auto; }
+  .code-block code { background:transparent; border:none; padding:0;
+    font-size:13px; color:#e0e0e0; line-height:1.6; }
+
+  /* FOOTER */
+  .article-footer { margin-top:80px; padding-top:40px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .back-link { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border); padding:10px 20px; transition:all 0.2s; }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); }
+  .author-block { font-family:'Space Mono',monospace; font-size:11px; color:#555; }
+  .author-block span { color:var(--accent); }
+
+  /* PAGE FOOTER */
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+
+  @media(max-width:768px) {
+    nav { padding:0 20px; } .nav-links { display:none; }
+    .article-wrapper { padding:90px 20px 60px; }
+    footer { padding:24px 20px; flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/articles">Articles</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrapper">
+  <div class="article-meta">
+    <div class="meta-tags">
+      <span class="meta-tag accent"></span>
+      <span class="meta-tag">Intermediate</span>
+      <span class="meta-tag">4 MIN READ</span>
+    </div>
+    <h1 class="article-title">Mastering Ansible Playbooks: A Practical Guide</h1>
+    <p class="article-excerpt">Master Ansible Playbooks to automate infrastructure tasks efficiently. Learn structure, YAML syntax, modules, handlers, and variables in this practical guide.</p>
+    <div class="article-info">
+      <span>BY <span>Andres Bernal (@abernal093)</span></span>
+      <span>PUBLISHED <span>2026-10-26</span></span>
+      <span>STACKDEPLOY.DEV</span>
+    </div>
+  </div>
+
+  <div class="article-content">
+    <h1>Mastering Ansible Playbooks: A Practical Guide</h1>
+
+<p>Infrastructure as Code (IaC) is the cornerstone of modern DevOps. While running ad-hoc commands with <code>ansible</code> is useful for quick checks, <strong>Ansible Playbooks</strong> are where the true power of automation resides. Playbooks allow you to define complex configurations, orchestrate multi-step deployments, and ensure your infrastructure remains in a desired state.</p>
+
+<p>In this guide, we will break down the anatomy of a playbook, explore best practices for writing clean YAML, and demonstrate how to build modular configurations that scale with your environment.</p>
+
+<hr>
+
+<h2>The Anatomy of an Ansible Playbook</h2>
+
+<p>An Ansible Playbook is a YAML file that describes a set of tasks to be executed against managed nodes. Unlike imperative scripts that define <em>how</em> to perform a task, Playbooks are declarative—you define <em>what</em> the end state should look like, and Ansible handles the heavy lifting.</p>
+
+<p>A standard playbook structure looks like this:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">---
+- name: Configure Web Server
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Ensure Apache is installed
+      ansible.builtin.package:
+        name: httpd
+        state: present
+
+    - name: Ensure service is running
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes</code></pre></div>
+
+<p>Every playbook starts with three dashes (<code>---</code>). The <code>hosts</code> directive maps to your inventory file, <code>become</code> handles privilege escalation, and <code>tasks</code> represent the sequential actions to be taken.</p>
+
+<hr>
+
+<h2>Mastering YAML Syntax</h2>
+
+<p>Ansible relies heavily on <strong>YAML (Yet Another Markup Language)</strong>. Because indentation is significant, even a single space error can break your automation.</p>
+
+<p>1. <strong>Indentation:</strong> Always use spaces, never tabs. Two spaces per level is the standard.</p>
+<p>2. <strong>Lists:</strong> Indicated by a dash <code>-</code>.</p>
+<p>3. <strong>Dictionaries:</strong> Key-value pairs separated by a colon and a space <code>: </code>.</p>
+
+<p>Consider this nested structure for installing multiple packages:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">tasks:
+  - name: Install core utilities
+    ansible.builtin.package:
+      name:
+        - vim
+        - git
+        - curl
+        - wget
+      state: latest</code></pre></div>
+
+<p>Using lists for packages is more efficient than creating multiple tasks, as it reduces the number of times Ansible checks the package manager’s state.</p>
+
+<hr>
+
+<h2>Working with Variables and Facts</h2>
+
+<p>To make your playbooks dynamic, you should avoid hardcoding values. <strong>Variables</strong> allow you to reuse playbooks across different environments (dev, staging, production) while keeping the underlying logic consistent.</p>
+
+<h3>Defining Variables</h3>
+<p>You can define variables directly in the playbook, in your inventory, or within <code>group_vars</code> and <code>host_vars</code> files.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">- name: Web Server Setup
+  hosts: webservers
+  vars:
+    web_port: 8080
+  tasks:
+    - name: Copy configuration file
+      ansible.builtin.template:
+        src: httpd.conf.j2
+        dest: /etc/httpd/conf/httpd.conf</code></pre></div>
+
+<h3>Ansible Facts</h3>
+<p>Ansible automatically collects data about your managed nodes when a playbook runs. This data is known as <strong>Facts</strong>. You can view these facts by running:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ansible all -m setup</code></pre></div>
+
+<p>You can use these variables in your tasks, for example: <code>{{ ansible_distribution }}</code> or <code>{{ ansible_memtotal_mb }}</code>.</p>
+
+<hr>
+
+<h2>Handlers: Triggering Events</h2>
+
+<p>Sometimes, an action should only occur if a previous task resulted in a change. This is the perfect use case for <strong>Handlers</strong>.</p>
+
+<p>For example, you don’t need to restart your web server every time a playbook runs; you only need to restart it if the configuration file has been updated.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">tasks:
+  - name: Copy site configuration
+    ansible.builtin.template:
+      src: index.html.j2
+      dest: /var/www/html/index.html
+    notify: Restart Apache
+
+handlers:
+  - name: Restart Apache
+    ansible.builtin.service:
+      name: httpd
+      state: restarted</code></pre></div>
+
+<p>Handlers run only once, at the very end of the playbook, regardless of how many tasks notified them. This prevents redundant service restarts.</p>
+
+<hr>
+
+<h2>Best Practices for Scaling Playbooks</h2>
+
+<p>As your infrastructure grows, maintaining a single massive YAML file becomes impossible. Follow these strategies to keep your code maintainable:</p>
+
+<p>1. <strong>Use Roles:</strong> Roles allow you to bundle tasks, handlers, variables, and templates into a standard directory structure. This promotes reusability across different projects.</p>
+<p>2. <strong>Keep Tasks Small:</strong> A task should do one thing. If your task description is a paragraph long, break it up.</p>
+<p>3. <strong>Use Idempotency:</strong> Ensure your tasks are idempotent—they should produce the same result regardless of whether they have run once or a hundred times.</p>
+<p>4. <strong>Version Control:</strong> Store your playbooks in Git. Treat your infrastructure code with the same rigor as your application code.</p>
+
+<hr>
+
+<h2>Practical Lab: Your First Automation</h2>
+
+<p>Let’s apply what we have learned. We will create a playbook to secure a Linux server by creating a custom user and hardening the SSH configuration.</p>
+
+<h3>1. Create the Playbook `setup_server.yml`</h3>
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">---
+- name: Initial Server Hardening
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create sysadmin user
+      ansible.builtin.user:
+        name: sysadmin
+        state: present
+        groups: wheel
+
+    - name: Disable SSH root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: sshd
+        state: restarted</code></pre></div>
+
+<h3>2. Verify Syntax</h3>
+<p>Before running, always check your YAML syntax:</p>
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ansible-playbook setup_server.yml --syntax-check</code></pre></div>
+
+<h3>3. Run the Playbook</h3>
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ansible-playbook -i inventory.ini setup_server.yml</code></pre></div>
+
+<p>Monitor the output. Ansible will display "OK" for tasks that require no changes and "changed" for tasks where it actually performed an action. This is the definition of infrastructure as code in action.</p>
+
+<p>By mastering these fundamentals, you move from simply managing servers to orchestrating your entire data center with predictable, repeatable, and scalable code.</p>
+  </div>
+
+  <div class="article-footer">
+    <a href="/" class="back-link">← Back to Articles</a>
+    <div class="author-block">Written by <span>Andres Bernal</span> | <span>@abernal093</span></div>
+  </div>
+</article>
+
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+</script>
+</body>
+</html>
