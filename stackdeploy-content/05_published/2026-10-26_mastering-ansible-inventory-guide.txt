@@ -1,0 +1,225 @@
+========================================================
+  STACKDEPLOY — ARTÍCULO EN BORRADOR
+========================================================
+TÍTULO:       Mastering Ansible Inventory: Describing Your Infrastructure
+SLUG:         mastering-ansible-inventory-guide
+FECHA:        2026-10-26
+CATEGORÍA:    Ansible
+NIVEL:        Intermediate
+ESTADO:       LISTO PARA PUBLICAR
+AUTOR:        Andres Bernal (@abernal093)
+CREADO:       20261026_201809
+--------------------------------------------------------
+DESCRIPCIÓN SEO:
+Learn how to master Ansible inventory files to organize, manage, and scale your infrastructure effectively with static and dynamic methods.
+
+KEYWORDS:
+ansible inventory, infrastructure as code, devops, system administration, server management, yaml, linux automation, configuration management, host groups, dynamic inventory
+========================================================
+
+CUERPO DEL ARTÍCULO:
+──────────────────────────────────────────────────────
+
+# Mastering Ansible Inventory: Describing Your Infrastructure
+
+In the world of configuration management, your infrastructure is only as effective as your ability to target it. Ansible’s **Inventory** is the foundational file that tells the automation engine which servers to talk to, how to connect to them, and how they relate to one another. Whether you are managing a single web server or a fleet of thousands of nodes across multiple cloud regions, mastering inventory management is a critical skill for any DevOps engineer.
+
+In this guide, we will move beyond basic IP lists and explore how to structure inventory files, leverage groups, use variables, and implement dynamic inventory sources to keep your automation synchronized with your live environment.
+
+---
+
+## The Fundamentals of Ansible Inventory
+
+At its core, an inventory is a collection of managed nodes—the servers or network devices you intend to configure. By default, Ansible looks for this file at `/etc/ansible/hosts`, though in modern workflows, it is best practice to keep a custom `inventory.ini` or `inventory.yml` file within your project directory.
+
+The simplest inventory is a plain text file containing IP addresses or FQDNs:
+
+```ini
+192.168.1.10
+web-01.example.com
+db-01.internal.net
+```
+
+While functional, this flat list offers no context. As your environment grows, you need a way to categorize these nodes into logical groups.
+
+---
+
+## Grouping Hosts: Organization at Scale
+
+Grouping is the heart of Ansible's scalability. By assigning hosts to specific groups (e.g., `[webservers]`, `[databases]`), you can execute tasks against logical tiers rather than individual machines.
+
+Consider a multi-tier architecture defined in an `inventory.ini` file:
+
+```ini
+[webservers]
+web-01.example.com
+web-02.example.com
+
+[databases]
+db-01.example.com
+db-02.example.com
+
+[production:children]
+webservers
+databases
+```
+
+Here, we used **nested groups** (or parent-child groups). The `[production:children]` section aggregates the `webservers` and `databases` groups into a single `production` group. When you run a playbook against `production`, Ansible iterates through every host contained in those underlying groups.
+
+---
+
+## Harnessing Variables in Inventory
+
+An inventory file is more than just a host list; it is a repository for metadata. You can assign **variables** directly to hosts or groups to define how Ansible should interact with them. This is particularly useful for overriding default connection settings.
+
+### Host Variables
+If a specific server requires a non-standard SSH port or a specific user:
+
+```ini
+web-01.example.com ansible_ssh_port=2222 ansible_user=admin
+```
+
+### Group Variables
+If an entire group shares configuration attributes, define them at the group level:
+
+```ini
+[webservers]
+web-01.example.com
+web-02.example.com
+
+[webservers:vars]
+ansible_user=deploy
+http_port=80
+```
+
+This ensures that any playbook targeting `webservers` will automatically inherit these variables, allowing your code to remain dry and portable.
+
+---
+
+## YAML vs. INI: Choosing the Right Format
+
+Ansible supports both the legacy INI format and YAML. While INI is often easier to read for simple lists, **YAML is the industry standard** for modern Ansible projects. YAML allows for complex, hierarchical data structures that INI cannot handle easily.
+
+Here is the equivalent of our previous example in YAML:
+
+```yaml
+all:
+  children:
+    webservers:
+      hosts:
+        web-01.example.com:
+        web-02.example.com:
+      vars:
+        ansible_user: deploy
+    databases:
+      hosts:
+        db-01.example.com:
+    production:
+      children:
+        webservers:
+        databases:
+```
+
+Using YAML provides better validation, supports complex data types (lists/dictionaries), and integrates better with version control systems like Git.
+
+---
+
+## Moving Beyond Static Lists: Dynamic Inventory
+
+Static inventory files are excellent for lab environments, but they fail in dynamic cloud environments (AWS, Azure, GCP) where server IPs change frequently as instances scale in or out. 
+
+**Dynamic Inventory** allows Ansible to query your cloud provider's API at runtime to populate the inventory. Instead of a file, you use an **Inventory Plugin**.
+
+### Example: Using the AWS EC2 Plugin
+To use AWS dynamic inventory, you create a configuration file named `aws_ec2.yml`:
+
+```yaml
+plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Environment: production
+keyed_groups:
+  - key: tags.Role
+    prefix: role
+```
+
+When you run `ansible-inventory -i aws_ec2.yml --graph`, Ansible will reach out to AWS, pull the instances with the tag `Environment: production`, and automatically create groups based on the `Role` tag (e.g., `role_web`, `role_db`). This removes the need to manually update your inventory every time a new server is provisioned.
+
+---
+
+## Practical Lab: Structuring Your First Inventory
+
+To put this into practice, follow these steps to organize a small infrastructure environment.
+
+### Step 1: Create the directory structure
+Organizing variables in separate files is the "Ansible way."
+
+```bash
+mkdir -p my_infrastructure/group_vars/all
+touch my_infrastructure/inventory.yml
+```
+
+### Step 2: Define your inventory
+Edit `my_infrastructure/inventory.yml`:
+
+```yaml
+all:
+  children:
+    web:
+      hosts:
+        node01:
+          ansible_host: 192.168.0.10
+    db:
+      hosts:
+        node02:
+          ansible_host: 192.168.0.20
+```
+
+### Step 3: Define group variables
+Create `my_infrastructure/group_vars/web.yml`:
+
+```yaml
+package_name: nginx
+service_name: nginx
+```
+
+### Step 4: Verify the inventory
+Use the `ansible-inventory` tool to visualize your structure:
+
+```bash
+ansible-inventory -i inventory.yml --graph
+```
+
+**Expected output:**
+```text
+@all:
+  |--@db:
+  |  |--node02
+  |--@web:
+  |  |--node01
+  |--@ungrouped:
+```
+
+By separating hosts and variables, you ensure that your automation logic remains decoupled from the specific infrastructure details. This modular approach allows you to swap environments—from staging to production—simply by pointing Ansible to a different inventory file or variable directory.
+
+---
+
+## Best Practices Summary
+
+1. **Keep it DRY:** Use group variables to avoid repeating settings across multiple hosts.
+2. **Version Control:** Store your inventory in Git alongside your playbooks.
+3. **Use YAML:** Default to YAML files for better readability and structure.
+4. **Prefer Groups:** Never target specific IPs in your playbooks; always target groups.
+5. **Automate Discovery:** For cloud environments, always investigate dynamic inventory plugins to ensure your list of servers is always accurate without manual intervention.
+
+By mastering how you define your servers, you lay the groundwork for reliable, repeatable, and scalable infrastructure management. Next, we will explore how to pass these variables into your roles and playbooks to build truly generic and reusable automation.
+
+========================================================
+  NOTAS PARA REVISIÓN:
+  [x] Spelling correct
+  [x] Commands verified
+  [x] SEO description under 160 chars
+  [x] Heading structure correct
+  [x] Title has main keyword
+========================================================

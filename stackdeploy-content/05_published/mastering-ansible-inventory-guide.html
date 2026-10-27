@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastering Ansible Inventory: Describing Your Infrastructure | StackDeploy</title>
+<meta name="description" content="Learn how to master Ansible inventory files to organize, manage, and scale your infrastructure effectively with static and dynamic methods.">
+<meta name="keywords" content="ansible inventory, infrastructure as code, devops, system administration, server management, yaml, linux automation, configuration management, host groups, dynamic inventory">
+<meta name="author" content="Andres Bernal">
+<meta property="og:title" content="Mastering Ansible Inventory: Describing Your Infrastructure">
+<meta property="og:description" content="Learn how to master Ansible inventory files to organize, manage, and scale your infrastructure effectively with static and dynamic methods.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://stackdeploy.dev/articles/mastering-ansible-inventory-guide">
+<link rel="canonical" href="https://stackdeploy.dev/articles/mastering-ansible-inventory-guide">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a; --dark: #111; --card: #141414;
+    --accent: #b0b0b0; --white: #f0f0f0; --gray: #888; --border: #222;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; line-height:1.8; }
+
+  /* NAV */
+  nav { position:fixed; top:0; width:100%; z-index:999; display:flex; align-items:center;
+    justify-content:space-between; padding:0 40px; height:64px;
+    background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+    color:var(--accent); text-decoration:none; }
+  .nav-links { display:flex; gap:8px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; padding:8px 16px; border:1px solid transparent;
+    transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
+  .nav-links a:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ARTICLE */
+  .article-wrapper { max-width:780px; margin:0 auto; padding:100px 40px 80px; }
+
+  .article-meta { margin-bottom:40px; }
+  .meta-tags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .meta-tag { font-family:'Space Mono',monospace; font-size:9px; color:var(--white);
+    background:#2a2a2a; padding:4px 10px; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid #3a3a3a; }
+  .meta-tag.accent { background:var(--accent); color:var(--black); border-color:var(--accent); }
+  .article-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,6vw,64px);
+    line-height:1; letter-spacing:1px; color:var(--white); margin-bottom:16px; }
+  .article-excerpt { font-size:16px; color:var(--gray); line-height:1.7;
+    font-weight:300; margin-bottom:24px; border-left:3px solid var(--accent); padding-left:20px; }
+  .article-info { display:flex; gap:24px; font-family:'Space Mono',monospace;
+    font-size:11px; color:#555; flex-wrap:wrap; }
+  .article-info span { color:var(--accent); }
+
+  /* CONTENT */
+  .article-content { border-top:1px solid var(--border); padding-top:48px; }
+  .article-content h1 { font-family:'Bebas Neue',sans-serif; font-size:42px; margin:48px 0 16px; color:var(--accent); }
+  .article-content h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; margin:40px 0 16px;
+    color:var(--white); border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .article-content h3 { font-family:'Bebas Neue',sans-serif; font-size:24px; margin:32px 0 12px; color:var(--accent); }
+  .article-content h4 { font-size:16px; font-weight:600; margin:24px 0 8px; color:var(--white); }
+  .article-content p { font-size:15px; color:#ccc; margin-bottom:20px; line-height:1.8; }
+  .article-content ul { margin:16px 0 24px 0; padding-left:0; list-style:none; }
+  .article-content li { font-size:15px; color:#ccc; padding:6px 0 6px 20px;
+    border-left:2px solid var(--border); margin-bottom:4px; position:relative; }
+  .article-content li::before { content:'→'; position:absolute; left:-20px; color:var(--accent); }
+  .article-content hr { border:none; border-top:1px solid var(--border); margin:40px 0; }
+  .article-content strong { color:var(--white); font-weight:600; }
+  .article-content em { color:var(--accent); font-style:italic; }
+  .article-content a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(176,176,176,0.3); }
+  .article-content a:hover { border-bottom-color:var(--accent); }
+  .article-content code { font-family:'Space Mono',monospace; font-size:12px;
+    background:#1a1a1a; color:var(--accent); padding:2px 6px; border:1px solid var(--border); }
+
+  /* CODE BLOCKS */
+  .code-block { background:#0d0d0d; border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+  .code-header { display:flex; align-items:center; justify-content:space-between;
+    padding:8px 16px; background:#111; border-bottom:1px solid var(--border); }
+  .code-lang { font-family:'Space Mono',monospace; font-size:10px; color:var(--accent);
+    letter-spacing:2px; text-transform:uppercase; }
+  .copy-btn { font-family:'Space Mono',monospace; font-size:9px; color:var(--gray);
+    background:transparent; border:1px solid var(--border); padding:4px 10px;
+    cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+  .copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .code-block pre { padding:20px; overflow-x:auto; }
+  .code-block code { background:transparent; border:none; padding:0;
+    font-size:13px; color:#e0e0e0; line-height:1.6; }
+
+  /* FOOTER */
+  .article-footer { margin-top:80px; padding-top:40px; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .back-link { font-family:'Space Mono',monospace; font-size:11px; color:var(--gray);
+    text-decoration:none; letter-spacing:1px; text-transform:uppercase;
+    border:1px solid var(--border); padding:10px 20px; transition:all 0.2s; }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); }
+  .author-block { font-family:'Space Mono',monospace; font-size:11px; color:#555; }
+  .author-block span { color:var(--accent); }
+
+  /* PAGE FOOTER */
+  footer { background:#080808; border-top:1px solid var(--border); padding:30px 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--accent); letter-spacing:3px; }
+  .footer-copy { font-family:'Space Mono',monospace; font-size:10px; color:#444; letter-spacing:2px; }
+  .footer-copy span { color:var(--accent); }
+
+  @media(max-width:768px) {
+    nav { padding:0 20px; } .nav-links { display:none; }
+    .article-wrapper { padding:90px 20px 60px; }
+    footer { padding:24px 20px; flex-direction:column; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">STACKDEPLOY</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/articles">Articles</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrapper">
+  <div class="article-meta">
+    <div class="meta-tags">
+      <span class="meta-tag accent"></span>
+      <span class="meta-tag">Intermediate</span>
+      <span class="meta-tag">5 MIN READ</span>
+    </div>
+    <h1 class="article-title">Mastering Ansible Inventory: Describing Your Infrastructure</h1>
+    <p class="article-excerpt">Learn how to master Ansible inventory files to organize, manage, and scale your infrastructure effectively with static and dynamic methods.</p>
+    <div class="article-info">
+      <span>BY <span>Andres Bernal (@abernal093)</span></span>
+      <span>PUBLISHED <span>2026-10-26</span></span>
+      <span>STACKDEPLOY.DEV</span>
+    </div>
+  </div>
+
+  <div class="article-content">
+    <h1>Mastering Ansible Inventory: Describing Your Infrastructure</h1>
+
+<p>In the world of configuration management, your infrastructure is only as effective as your ability to target it. Ansible’s <strong>Inventory</strong> is the foundational file that tells the automation engine which servers to talk to, how to connect to them, and how they relate to one another. Whether you are managing a single web server or a fleet of thousands of nodes across multiple cloud regions, mastering inventory management is a critical skill for any DevOps engineer.</p>
+
+<p>In this guide, we will move beyond basic IP lists and explore how to structure inventory files, leverage groups, use variables, and implement dynamic inventory sources to keep your automation synchronized with your live environment.</p>
+
+<hr>
+
+<h2>The Fundamentals of Ansible Inventory</h2>
+
+<p>At its core, an inventory is a collection of managed nodes—the servers or network devices you intend to configure. By default, Ansible looks for this file at <code>/etc/ansible/hosts</code>, though in modern workflows, it is best practice to keep a custom <code>inventory.ini</code> or <code>inventory.yml</code> file within your project directory.</p>
+
+<p>The simplest inventory is a plain text file containing IP addresses or FQDNs:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="ini">192.168.1.10
+web-01.example.com
+db-01.internal.net</code></pre></div>
+
+<p>While functional, this flat list offers no context. As your environment grows, you need a way to categorize these nodes into logical groups.</p>
+
+<hr>
+
+<h2>Grouping Hosts: Organization at Scale</h2>
+
+<p>Grouping is the heart of Ansible's scalability. By assigning hosts to specific groups (e.g., <code>[webservers]</code>, <code>[databases]</code>), you can execute tasks against logical tiers rather than individual machines.</p>
+
+<p>Consider a multi-tier architecture defined in an <code>inventory.ini</code> file:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="ini">[webservers]
+web-01.example.com
+web-02.example.com
+
+[databases]
+db-01.example.com
+db-02.example.com
+
+[production:children]
+webservers
+databases</code></pre></div>
+
+<p>Here, we used <strong>nested groups</strong> (or parent-child groups). The <code>[production:children]</code> section aggregates the <code>webservers</code> and <code>databases</code> groups into a single <code>production</code> group. When you run a playbook against <code>production</code>, Ansible iterates through every host contained in those underlying groups.</p>
+
+<hr>
+
+<h2>Harnessing Variables in Inventory</h2>
+
+<p>An inventory file is more than just a host list; it is a repository for metadata. You can assign <strong>variables</strong> directly to hosts or groups to define how Ansible should interact with them. This is particularly useful for overriding default connection settings.</p>
+
+<h3>Host Variables</h3>
+<p>If a specific server requires a non-standard SSH port or a specific user:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="ini">web-01.example.com ansible_ssh_port=2222 ansible_user=admin</code></pre></div>
+
+<h3>Group Variables</h3>
+<p>If an entire group shares configuration attributes, define them at the group level:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">ini</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="ini">[webservers]
+web-01.example.com
+web-02.example.com
+
+[webservers:vars]
+ansible_user=deploy
+http_port=80</code></pre></div>
+
+<p>This ensures that any playbook targeting <code>webservers</code> will automatically inherit these variables, allowing your code to remain dry and portable.</p>
+
+<hr>
+
+<h2>YAML vs. INI: Choosing the Right Format</h2>
+
+<p>Ansible supports both the legacy INI format and YAML. While INI is often easier to read for simple lists, <strong>YAML is the industry standard</strong> for modern Ansible projects. YAML allows for complex, hierarchical data structures that INI cannot handle easily.</p>
+
+<p>Here is the equivalent of our previous example in YAML:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">all:
+  children:
+    webservers:
+      hosts:
+        web-01.example.com:
+        web-02.example.com:
+      vars:
+        ansible_user: deploy
+    databases:
+      hosts:
+        db-01.example.com:
+    production:
+      children:
+        webservers:
+        databases:</code></pre></div>
+
+<p>Using YAML provides better validation, supports complex data types (lists/dictionaries), and integrates better with version control systems like Git.</p>
+
+<hr>
+
+<h2>Moving Beyond Static Lists: Dynamic Inventory</h2>
+
+<p>Static inventory files are excellent for lab environments, but they fail in dynamic cloud environments (AWS, Azure, GCP) where server IPs change frequently as instances scale in or out. </p>
+
+<p><strong>Dynamic Inventory</strong> allows Ansible to query your cloud provider's API at runtime to populate the inventory. Instead of a file, you use an <strong>Inventory Plugin</strong>.</p>
+
+<h3>Example: Using the AWS EC2 Plugin</h3>
+<p>To use AWS dynamic inventory, you create a configuration file named <code>aws_ec2.yml</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Environment: production
+keyed_groups:
+  - key: tags.Role
+    prefix: role</code></pre></div>
+
+<p>When you run <code>ansible-inventory -i aws_ec2.yml --graph</code>, Ansible will reach out to AWS, pull the instances with the tag <code>Environment: production</code>, and automatically create groups based on the <code>Role</code> tag (e.g., <code>role_web</code>, <code>role_db</code>). This removes the need to manually update your inventory every time a new server is provisioned.</p>
+
+<hr>
+
+<h2>Practical Lab: Structuring Your First Inventory</h2>
+
+<p>To put this into practice, follow these steps to organize a small infrastructure environment.</p>
+
+<h3>Step 1: Create the directory structure</h3>
+<p>Organizing variables in separate files is the "Ansible way."</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">mkdir -p my_infrastructure/group_vars/all
+touch my_infrastructure/inventory.yml</code></pre></div>
+
+<h3>Step 2: Define your inventory</h3>
+<p>Edit <code>my_infrastructure/inventory.yml</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">all:
+  children:
+    web:
+      hosts:
+        node01:
+          ansible_host: 192.168.0.10
+    db:
+      hosts:
+        node02:
+          ansible_host: 192.168.0.20</code></pre></div>
+
+<h3>Step 3: Define group variables</h3>
+<p>Create <code>my_infrastructure/group_vars/web.yml</code>:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="yaml">package_name: nginx
+service_name: nginx</code></pre></div>
+
+<h3>Step 4: Verify the inventory</h3>
+<p>Use the <code>ansible-inventory</code> tool to visualize your structure:</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="bash">ansible-inventory -i inventory.yml --graph</code></pre></div>
+
+<p><strong>Expected output:</strong></p>
+<div class="code-block"><div class="code-header"><span class="code-lang">text</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div><pre><code class="text">@all:
+  |--@db:
+  |  |--node02
+  |--@web:
+  |  |--node01
+  |--@ungrouped:</code></pre></div>
+
+<p>By separating hosts and variables, you ensure that your automation logic remains decoupled from the specific infrastructure details. This modular approach allows you to swap environments—from staging to production—simply by pointing Ansible to a different inventory file or variable directory.</p>
+
+<hr>
+
+<h2>Best Practices Summary</h2>
+
+<p>1. <strong>Keep it DRY:</strong> Use group variables to avoid repeating settings across multiple hosts.</p>
+<p>2. <strong>Version Control:</strong> Store your inventory in Git alongside your playbooks.</p>
+<p>3. <strong>Use YAML:</strong> Default to YAML files for better readability and structure.</p>
+<p>4. <strong>Prefer Groups:</strong> Never target specific IPs in your playbooks; always target groups.</p>
+<p>5. <strong>Automate Discovery:</strong> For cloud environments, always investigate dynamic inventory plugins to ensure your list of servers is always accurate without manual intervention.</p>
+
+<p>By mastering how you define your servers, you lay the groundwork for reliable, repeatable, and scalable infrastructure management. Next, we will explore how to pass these variables into your roles and playbooks to build truly generic and reusable automation.</p>
+  </div>
+
+  <div class="article-footer">
+    <a href="/" class="back-link">← Back to Articles</a>
+    <div class="author-block">Written by <span>Andres Bernal</span> | <span>@abernal093</span></div>
+  </div>
+</article>
+
+<footer>
+  <div class="footer-logo">STACKDEPLOY</div>
+  <div class="footer-copy">© <span>2026</span> ANDRES BERNAL — ALL RIGHTS RESERVED</div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+</script>
+</body>
+</html>
